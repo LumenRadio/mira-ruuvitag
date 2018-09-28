@@ -11,7 +11,12 @@
 #define APP_CONFIG_EXPOSE_KEY 1
 
 app_config_t app_config;
-int new_config_loaded;
+
+static app_config_t new_config;
+static int new_config_loaded;
+static int lost_field = 0;
+
+PROCESS(app_config_writer, "Config writer");
 
 static void config_nfc_on_open(
     mira_nfc_ndef_writer_t *writer);
@@ -49,7 +54,7 @@ void app_config_init(
     void)
 {
     /* Setup nfc */
-    if (MIRA_SUCCESS != mira_config_read(&app_config, 0, sizeof(app_config_t)))
+    if (MIRA_SUCCESS != mira_config_read(&app_config, sizeof(app_config_t)))
     {
         memset(&app_config, 0xff, sizeof(app_config_t));
     }
@@ -61,8 +66,11 @@ void app_config_init(
 
     print_config();
     new_config_loaded = 0;
+    lost_field = 0;
 
     nfcif_register_handler(&config_nfc_handler);
+
+    process_start(&app_config_writer, NULL);
 }
 
 int app_config_is_configured(
@@ -74,9 +82,8 @@ int app_config_is_configured(
 static void config_nfc_on_field_off(
     void)
 {
-    if(new_config_loaded) {
-        mira_sys_reset();
-    }
+    lost_field = 1;
+    process_poll(&app_config_writer);
 }
 
 static uint8_t *hexstr(
@@ -215,9 +222,13 @@ static void config_nfc_on_save(
     uint8_t *file,
     mira_size_t size)
 {
-    app_config_t new_config;
     mira_nfc_ndef_iter_t iter;
     mira_nfc_ndef_record_t rec;
+
+    if(new_config_loaded) {
+        /* Already loaded, waiting for reset */
+        return;
+    }
 
     memcpy(&new_config, &app_config, sizeof(app_config_t));
 
@@ -301,7 +312,32 @@ static void config_nfc_on_save(
         }
     }
 
-    mira_config_erase();
-    mira_config_write(&new_config, 0, sizeof(app_config_t));
     new_config_loaded = 1;
 }
+
+PROCESS_THREAD(app_config_writer, ev, data)
+{
+    mira_status_t status;
+    PROCESS_BEGIN();
+    while (1)
+    {
+        PROCESS_YIELD_UNTIL(lost_field);
+        lost_field = 0;
+
+        if(new_config_loaded) {
+            printf(
+                "Writing config, Pan ID: %08lx rate: %02x\n",
+                new_config.net_panid,
+                new_config.net_rate);
+
+            status = mira_config_write(&new_config, sizeof(app_config_t));
+            printf("Status: %d\n", status);
+            PROCESS_WAIT_WHILE(mira_config_is_working());
+
+            printf("Done\n");
+            mira_sys_reset();
+        }
+    }
+    PROCESS_END();
+}
+
