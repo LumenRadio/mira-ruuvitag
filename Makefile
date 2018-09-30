@@ -6,8 +6,11 @@ LIBDIR ?= $(CURDIR)/../mira/build/libmira
 SOURCE_FILES = \
 	app-config.c \
 	application.c \
+	board.c \
 	boot.c \
 	net-status.c \
-	nfc-if.c
+	nfc-if.c \
+	sensor-bme280.c \
+	spi-if.c
 
 include $(LIBDIR)/Makefile.include
