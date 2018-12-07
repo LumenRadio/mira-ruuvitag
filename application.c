@@ -27,6 +27,7 @@
 
 PROCESS(main_proc, "Main process");
 
+
 static uint16_t build_packet(uint8_t *pkt) {
     strcpy((char *)pkt, app_config.name);
     return strlen(app_config.name);
@@ -35,14 +36,18 @@ static uint16_t build_packet(uint8_t *pkt) {
 PROCESS_THREAD(main_proc, ev, data) {
     static struct etimer tm;
     static struct mira_net_udp_connection_t *conn;
+    mira_net_config_t netconf;
     PROCESS_BEGIN();
 
     printf("Main process started\n");
 
-    mira_net_encryption_key_set(app_config.net_key);
-    mira_net_set_pan_id(app_config.net_panid);
-    mira_net_set_rate((mira_net_rate_t)app_config.net_rate);
-    mira_net_init();
+    netconf.pan_id = app_config.net_panid;
+    memcpy(netconf.key, app_config.net_key, 16);
+    netconf.mode = MIRA_NET_MODE_MESH;
+    netconf.rate = app_config.net_rate;
+    netconf.antenna = MIRA_NET_ANTENNA_ONBOARD;
+
+    mira_net_init(&netconf);
     net_status_init();
 
     conn = mira_net_udp_connect(NULL, 0, NULL, NULL);
