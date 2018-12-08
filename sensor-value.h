@@ -10,7 +10,8 @@ typedef enum {
     SENSOR_VALUE_UNIT_NONE = 0, /* No value set */
     SENSOR_VALUE_UNIT_DEG_C,
     SENSOR_VALUE_UNIT_PASCAL,
-    SENSOR_VALUE_UNIT_PERCENT
+    SENSOR_VALUE_UNIT_PERCENT,
+    SENSOR_VALUE_UNIT_VOLT
 } sensor_value_unit_t;
 
 /**

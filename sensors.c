@@ -1,9 +1,12 @@
 #include "sensors.h"
 
 #include "sensor-value.h"
+
+#include "sensor-battery.h"
 #include "sensor-bme280.h"
 
 #include "nfc-if.h"
+#include "app-config.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -18,18 +21,21 @@ typedef struct
 /*
  * Sensors
  */
+static sensor_battery_ctx_t sensor_battery_ctx;
 static sensor_bme280_ctx_t sensor_bme280_ctx;
 
 /*
  * List of handlers
  */
 static const sensor_value_t *sensor_values[] = {
+    &sensor_battery_ctx.val_battery,
     &sensor_bme280_ctx.val_temperature,
     &sensor_bme280_ctx.val_humidity,
     &sensor_bme280_ctx.val_pressure,
     NULL
 };
 static const sensor_handler_t sensor_handler[] = {
+    { &sensor_battery_init, &sensor_battery_sample, &sensor_battery_ctx },
     { &sensor_bme280_init, &sensor_bme280_sample, &sensor_bme280_ctx },
     { NULL, NULL, NULL },
 };
@@ -125,7 +131,7 @@ PROCESS_THREAD(
                 sensor_value_unit_name[val->unit]);
         }
 
-        etimer_set(&timer, CLOCK_SECOND * 10);
+        etimer_set(&timer, CLOCK_SECOND * app_config.update_interval);
         PROCESS_YIELD_UNTIL(etimer_expired(&timer));
     }
 
@@ -148,7 +154,9 @@ static void sensors_nfc_on_open(
 
         val_pq = val->value_p;
         val_pq *= 1000;
-        val_pq /= val->value_q;
+        if(val->value_q != 0) {
+            val_pq /= val->value_q;
+        }
 
         val_int = val_pq / 1000;
         val_fraq = val_pq % 1000;
