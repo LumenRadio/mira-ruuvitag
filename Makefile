@@ -15,6 +15,7 @@ SOURCE_FILES = \
 	sensor-bme280-math.c \
 	sensor-value.c \
 	sensors.c \
+	sensors-sender.c \
 	spi-if.c
 
 include $(LIBDIR)/Makefile.include

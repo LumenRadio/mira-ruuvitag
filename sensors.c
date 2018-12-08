@@ -5,6 +5,8 @@
 #include "sensor-battery.h"
 #include "sensor-bme280.h"
 
+#include "sensors-sender.h"
+
 #include "nfc-if.h"
 #include "app-config.h"
 
@@ -51,6 +53,11 @@ static const nfcif_handler_t sensors_nfc_handler = {
 };
 
 /*
+ * UDP interface
+ */
+static sensors_sender_context_t sender_ctx;
+
+/*
  * Processes
  */
 PROCESS(sensors_proc, "Sensors");
@@ -67,6 +74,7 @@ PROCESS_THREAD(
     data)
 {
     static int i;
+    static int sensor_count;
     static struct etimer timer;
     PROCESS_BEGIN();
 
@@ -91,6 +99,7 @@ PROCESS_THREAD(
 
     /* Enable NFC first when sensors are started */
     nfcif_register_handler(&sensors_nfc_handler);
+    sensors_sender_init(&sender_ctx);
 
     /*
      * Start polling
@@ -117,9 +126,10 @@ PROCESS_THREAD(
         }
 
         /*
-         * Print all sesnor values
+         * Print and count sesnor values
          */
         printf("Sensor values:\n");
+        sensor_count = 0;
         for (i = 0; sensor_values[i] != NULL; i++)
         {
             const sensor_value_t *val = sensor_values[i];
@@ -129,7 +139,13 @@ PROCESS_THREAD(
                 val->value_p,
                 val->value_q,
                 sensor_value_unit_name[val->unit]);
+            sensor_count++;
         }
+
+        /*
+         * Send sensor values to root
+         */
+        sensors_sender_send(&sender_ctx, sensor_values, sensor_count);
 
         etimer_set(&timer, CLOCK_SECOND * app_config.update_interval);
         PROCESS_YIELD_UNTIL(etimer_expired(&timer));

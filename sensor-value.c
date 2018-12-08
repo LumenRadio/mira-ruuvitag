@@ -7,11 +7,3 @@ const char *sensor_value_unit_name[] = {
     [SENSOR_VALUE_UNIT_PERCENT] = "%",
     [SENSOR_VALUE_UNIT_VOLT] = "V"
 };
-
-
-void sensor_value_pack(
-    uint8_t *buf,
-    const sensor_value_t *val)
-{
-
-}

@@ -27,10 +27,6 @@ typedef struct {
     char name[16];
 } sensor_value_t;
 
-#define SENSOR_VALUE_PACKED_SIZE 16
-
-void sensor_value_pack(uint8_t *buf, const sensor_value_t *val);
-
 extern const char *sensor_value_unit_name[];
 
 #endif
