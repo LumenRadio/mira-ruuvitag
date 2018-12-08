@@ -3,7 +3,10 @@
 #include "sensor-value.h"
 #include "sensor-bme280.h"
 
+#include "nfc-if.h"
+
 #include <stdio.h>
+#include <string.h>
 
 typedef struct
 {
@@ -29,6 +32,16 @@ static const sensor_value_t *sensor_values[] = {
 static const sensor_handler_t sensor_handler[] = {
     { &sensor_bme280_init, &sensor_bme280_sample, &sensor_bme280_ctx },
     { NULL, NULL, NULL },
+};
+
+/*
+ * NFC interface
+ */
+static void sensors_nfc_on_open(
+    mira_nfc_ndef_writer_t *writer);
+
+static const nfcif_handler_t sensors_nfc_handler = {
+    .on_open = sensors_nfc_on_open
 };
 
 /*
@@ -69,6 +82,9 @@ PROCESS_THREAD(
     }
 
     printf("Sensors: Started\n");
+
+    /* Enable NFC first when sensors are started */
+    nfcif_register_handler(&sensors_nfc_handler);
 
     /*
      * Start polling
@@ -114,4 +130,48 @@ PROCESS_THREAD(
     }
 
     PROCESS_END();
+}
+
+static void sensors_nfc_on_open(
+    mira_nfc_ndef_writer_t *writer)
+{
+    int i;
+    char vendor[128];
+    char value[128];
+    for (i = 0; sensor_values[i] != NULL; i++)
+    {
+        const sensor_value_t *val = sensor_values[i];
+        int64_t val_pq;
+
+        int32_t val_int; /* Integer values */
+        int32_t val_fraq; /* Fractional values, thousands */
+
+        val_pq = val->value_p;
+        val_pq *= 1000;
+        val_pq /= val->value_q;
+
+        val_int = val_pq / 1000;
+        val_fraq = val_pq % 1000;
+
+        if(val_fraq < 0) {
+            val_fraq += 1000;
+        }
+
+        sprintf(
+            vendor,
+            "application/vnd.lumenradio.sesnor.%s",
+            sensor_values[i]->name);
+        sprintf(
+            value,
+            "%ld.%03ld %s",
+            val_int,
+            val_fraq,
+            sensor_value_unit_name[val->unit]);
+
+        mira_nfc_ndef_write_copy(writer, MIRA_NFC_NDEF_TNF_MIME_TYPE,
+            (const uint8_t *) vendor, strlen(vendor),
+            NULL, 0,
+            (uint8_t *) value, strlen(value)
+                );
+    }
 }
