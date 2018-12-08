@@ -1,3 +1,7 @@
+/*
+ * Compensation formulas in this document is based upon bosch bme280 datasheet.
+ */
+
 #include "sensor-bme280-math.h"
 
 
