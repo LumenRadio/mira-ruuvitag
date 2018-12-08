@@ -27,11 +27,9 @@ PROCESS(boot_proc, "Boot process");
 void mira_setup(
     void)
 {
-
     board_setup();
 
     process_start(&boot_proc, NULL);
-
 }
 
 PROCESS_THREAD(boot_proc, ev, data)

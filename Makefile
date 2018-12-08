@@ -11,6 +11,7 @@ SOURCE_FILES = \
 	net-status.c \
 	nfc-if.c \
 	sensor-bme280.c \
+	sensor-bme280-math.c \
 	spi-if.c
 
 include $(LIBDIR)/Makefile.include

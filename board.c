@@ -21,6 +21,20 @@ void board_setup(
 {
     uint32_t i;
 
+
+#if defined(BOARD_STDOUT_RTT_ID)
+    mira_rtt_init();
+    mira_rtt_set_blocking(BOARD_STDOUT_RTT_ID, 1);
+#endif
+
+#if defined(BOARD_STDOUT_UART_ID)
+    mira_uart_init(BOARD_STDOUT_UART_ID, &(mira_uart_config_t){
+        .tx_pin = BOARD_UART_PIN_TX,
+        .rx_pin = BOARD_UART_PIN_RX,
+        .baudrate = BOARD_UART_BAUDRATE
+    });
+#endif
+
     /*
      * Enable buttons/LEDs
      */
@@ -60,15 +74,6 @@ void board_setup(
 
     spi_init();
     nfcif_init();
-
-
-#if defined(BOARD_STDOUT_RTT_ID)
-    mira_rtt_init();
-    mira_rtt_set_blocking(BOARD_STDOUT_RTT_ID, 1);
-#endif
-
-#if defined(BOARD_STDOUT_UART_ID)
-#endif
 }
 
 void board_led_set(
