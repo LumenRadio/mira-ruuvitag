@@ -52,7 +52,7 @@
 #define BOARD_UART_PIN_TX               MIRA_GPIO_PIN_UNDEFINED
 #define BOARD_UART_PIN_RX               MIRA_GPIO_PIN_UNDEFINED
 
-#define BOARD_STDOUT_RTT_ID             0
+//#define BOARD_STDOUT_RTT_ID             0
 #endif
 
 void board_setup(
