@@ -48,7 +48,7 @@ int32_t sensor_bme280_math_calc_tfine(
 /**
  * Calculate temperature from t_fine
  *
- * Returns temperature in 0.01deg C
+ * Returns temperature in 1/25600 deg C
  */
 int32_t sensor_bme280_math_calc_t(
     int32_t t_fine);

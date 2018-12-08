@@ -22,12 +22,11 @@
 
 #include "app-config.h"
 #include "net-status.h"
-#include "sensor-bme280.h"
+#include "sensors.h"
 
 #define SENSOR_INFO_PORT 7337
 
 PROCESS(main_proc, "Main process");
-
 
 static uint16_t build_packet(uint8_t *pkt) {
     strcpy((char *)pkt, app_config.name);
@@ -42,8 +41,6 @@ PROCESS_THREAD(main_proc, ev, data) {
 
     printf("Main process started\n");
 
-    sensor_bme280_init();
-
     netconf.pan_id = app_config.net_panid;
     memcpy(netconf.key, app_config.net_key, 16);
     netconf.mode = MIRA_NET_MODE_MESH;
@@ -53,6 +50,8 @@ PROCESS_THREAD(main_proc, ev, data) {
     mira_net_init(&netconf);
 
     net_status_init();
+
+    sensors_init();
 
     conn = mira_net_udp_connect(NULL, 0, NULL, NULL);
 

@@ -41,7 +41,7 @@ int32_t sensor_bme280_math_calc_tfine(
 int32_t sensor_bme280_math_calc_t(
     int32_t t_fine)
 {
-    return (t_fine * 5 + 128) >> 8;
+    return t_fine * 5 + 128;
 }
 
 uint32_t sensor_bme280_math_calc_p(

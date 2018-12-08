@@ -1,7 +1,6 @@
 #include <mira.h>
 #include "sensor-bme280.h"
 #include "sensor-bme280-math.h"
-#include "nfc-if.h"
 #include "spi-if.h"
 #include "board.h"
 
@@ -9,44 +8,38 @@
 #include <string.h>
 #include <stdint.h>
 
-static sensor_bme280_calib_t bme280_calib;
-
 #define BME280_READ             0x80
 #define BME280_WRITE            0x00
 
 #define BME280_REG_RESET        0xE0
 #define BME280_RESET_VAL        0xB6
 
-PROCESS(sensor_bme280_startup, "Sensor: BME280 startup");
-PROCESS(sensor_bme280_reader, "Sensor: BME280 reader");
-PROCESS(sensor_bme280_connection, "Sensor: BME280");
-
-static void sensor_bme280_init_nfc_on_open(
-    mira_nfc_ndef_writer_t *writer)
-{
-}
-
-void sensor_bme280_init(
-    void)
-{
-    process_start(&sensor_bme280_connection, NULL);
-
-    nfcif_register_handler(&(nfcif_handler_t ) {
-            .on_open = sensor_bme280_init_nfc_on_open
-        });
-}
+PROCESS(sensor_bme280_init, "Sensor: BME280 startup");
+PROCESS(sensor_bme280_sample, "Sensor: BME280 reader");
 
 PROCESS_THREAD(
-    sensor_bme280_startup,
+    sensor_bme280_init,
     ev,
     data)
 {
     static struct etimer tm;
+    static sensor_bme280_ctx_t *ctx;
     static uint8_t tx_buf[2];
     static uint8_t raw88[0xa1-0x88+1];
     static uint8_t rawe1[0xf0-0xe1+1];
 
     PROCESS_BEGIN();
+
+    ctx = data;
+
+    memset(ctx, 0, sizeof(sensor_bme280_ctx_t));
+    strcpy(ctx->val_temperature.name, "temperature");
+    strcpy(ctx->val_humidity.name, "humidity");
+    strcpy(ctx->val_pressure.name, "pressure");
+
+    printf("bme280 started\n");
+
+    PROCESS_PAUSE();
 
     PROCESS_WAIT_UNTIL(spi_request(BOARD_BME280_CS_PIN));
     tx_buf[0] = BME280_WRITE | (BME280_REG_RESET & 0x7f);
@@ -76,21 +69,27 @@ PROCESS_THREAD(
     spi_release(BOARD_BME280_CS_PIN);
 
     /* First byte in each buffer is the command */
-    sensor_bme280_math_populate_calib(&bme280_calib, raw88+1, rawe1+1);
+    sensor_bme280_math_populate_calib(&ctx->cal, raw88+1, rawe1+1);
 
     PROCESS_END();
 }
 
 
 PROCESS_THREAD(
-    sensor_bme280_reader,
+    sensor_bme280_sample,
     ev,
     data)
 {
+    static sensor_bme280_ctx_t *ctx;
     static uint8_t tx_buf[6];
     static uint8_t rx_buf[9];
     static struct etimer tm;
+
     PROCESS_BEGIN();
+
+    ctx = data;
+
+    PROCESS_PAUSE();
 
     /*
      * Configure sensor and start measurement
@@ -136,43 +135,18 @@ PROCESS_THREAD(
     int32_t adc_h = ((uint32_t)rx_buf[7]) << 8
                   | ((uint32_t)rx_buf[8]) << 0;
 
-    int32_t val_t;
-    uint32_t val_p;
-    uint32_t val_h;
     int32_t t_fine;
 
-    t_fine = sensor_bme280_math_calc_tfine(&bme280_calib, adc_t);
-    val_t = sensor_bme280_math_calc_t(t_fine);
-    val_p = sensor_bme280_math_calc_p(&bme280_calib, adc_p, t_fine);
-    val_h = sensor_bme280_math_calc_h(&bme280_calib, adc_h, t_fine);
-
-    printf("T=%ld P=%lu H=%f\n", val_t, val_p, val_h);
-
-    PROCESS_END();
-}
-
-PROCESS_THREAD(
-    sensor_bme280_connection,
-    ev,
-    data)
-{
-    static struct etimer tm;
-
-    PROCESS_BEGIN();
-
-    process_start(&sensor_bme280_startup, NULL);
-    PROCESS_WAIT_WHILE(process_is_running(&sensor_bme280_startup));
-
-    printf("bme280 started\n");
-
-    while(1) {
-        etimer_set(&tm, CLOCK_SECOND * 2);
-
-        process_start(&sensor_bme280_reader, NULL);
-        PROCESS_WAIT_WHILE(process_is_running(&sensor_bme280_reader));
-
-        PROCESS_YIELD_UNTIL(etimer_expired(&tm));
-    }
+    t_fine = sensor_bme280_math_calc_tfine(&ctx->cal, adc_t);
+    ctx->val_temperature.value_p = sensor_bme280_math_calc_t(t_fine);
+    ctx->val_temperature.value_q = 25600;
+    ctx->val_temperature.unit = SENSOR_VALUE_UNIT_DEG_C;
+    ctx->val_pressure.value_p = sensor_bme280_math_calc_p(&ctx->cal, adc_p, t_fine);
+    ctx->val_pressure.value_q = 256;
+    ctx->val_pressure.unit = SENSOR_VALUE_UNIT_PASCAL;
+    ctx->val_humidity.value_p = sensor_bme280_math_calc_h(&ctx->cal, adc_h, t_fine);
+    ctx->val_humidity.value_q = 1024;
+    ctx->val_humidity.unit = SENSOR_VALUE_UNIT_PERCENT;
 
     PROCESS_END();
 }
