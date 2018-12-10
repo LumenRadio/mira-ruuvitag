@@ -151,16 +151,17 @@ PROCESS_THREAD(
     int32_t adc_h = ((uint32_t)rx_buf[7]) << 8
                   | ((uint32_t)rx_buf[8]) << 0;
 
-    int32_t t_fine;
+    int32_t value_T = sensor_bme280_math_calc_t(&ctx->cal, adc_t);
+    int32_t value_P = sensor_bme280_math_calc_p(&ctx->cal, adc_p, value_T);
+    int32_t value_H = sensor_bme280_math_calc_h(&ctx->cal, adc_h, value_T);
 
-    t_fine = sensor_bme280_math_calc_tfine(&ctx->cal, adc_t);
-    ctx->val_temperature.value_p = sensor_bme280_math_calc_t(t_fine);
-    ctx->val_temperature.value_q = 25600;
+    ctx->val_temperature.value_p = value_T;
+    ctx->val_temperature.value_q = 5120;
     ctx->val_temperature.unit = SENSOR_VALUE_UNIT_DEG_C;
-    ctx->val_pressure.value_p = sensor_bme280_math_calc_p(&ctx->cal, adc_p, t_fine);
+    ctx->val_pressure.value_p = value_P;
     ctx->val_pressure.value_q = 256;
     ctx->val_pressure.unit = SENSOR_VALUE_UNIT_PASCAL;
-    ctx->val_humidity.value_p = sensor_bme280_math_calc_h(&ctx->cal, adc_h, t_fine);
+    ctx->val_humidity.value_p = value_H;
     ctx->val_humidity.value_q = 1024;
     ctx->val_humidity.unit = SENSOR_VALUE_UNIT_PERCENT;
 

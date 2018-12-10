@@ -55,19 +55,11 @@ void sensor_bme280_math_populate_calib(
 /**
  * Calculate temperature
  *
- * Returns the temperature in fine resolution for internal use
- */
-int32_t sensor_bme280_math_calc_tfine(
-    sensor_bme280_calib_t *cal,
-    int32_t adc_T);
-
-/**
- * Calculate temperature from t_fine
- *
- * Returns temperature in 1/25600 deg C
+ * Returns the temperature in resolution of 1/5120 deg C
  */
 int32_t sensor_bme280_math_calc_t(
-    int32_t t_fine);
+    sensor_bme280_calib_t *cal,
+    int32_t adc_T);
 
 // Returns pressure in Pa as unsigned 32 bit integer in Q24.8 format (24 integer bits and 8 fractional bits).
 // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
@@ -77,10 +69,10 @@ int32_t sensor_bme280_math_calc_t(
  *
  * Returns the pressure in resolution of 1/256 Pa
  */
-uint32_t sensor_bme280_math_calc_p(
+int32_t sensor_bme280_math_calc_p(
     sensor_bme280_calib_t *cal,
     int32_t adc_P,
-    int32_t t_fine);
+    int32_t value_T);
 
 
 /**
@@ -88,9 +80,9 @@ uint32_t sensor_bme280_math_calc_p(
  *
  * Returns the relative humidity in resolution of 1/1024 %RH
  */
-uint32_t sensor_bme280_math_calc_h(
+int32_t sensor_bme280_math_calc_h(
     sensor_bme280_calib_t *cal,
     int32_t adc_H,
-    int32_t t_fine);
+    int32_t value_T);
 
 #endif
