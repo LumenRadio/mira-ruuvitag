@@ -34,20 +34,25 @@ To comission the device, Use a phone and an NFC tag reader/writer app to write
 an NDEF file containing following records:
 
 1. Name
-  - MIME: application/vnd.lumenradio.name
-  - Payload: Name of the device, string up to 32 characters
+   - MIME: application/vnd.lumenradio.name
+   - Payload: Name of the device, string up to 32 characters
 2. Network PAN ID
-  - MIME: application/vnd.lumenradio.panid
-  - Payload: Hex, 8 characters / 4 bytes, MSB first
+   - MIME: application/vnd.lumenradio.panid
+   - Payload: Hex, 8 characters / 4 bytes, MSB first
 3. Network encryption key
-  - MIME: application/vnd.lumenradio.net_key
-  - Payload: Hex string, 32 characters
+   - MIME: application/vnd.lumenradio.net_key
+   - Payload: Hex string, 32 characters
 4. Node data rate (see mira_net_config_t in documentation)
-  - MIME: application/vnd.lumenradio.net_rate
-  - Payload: Hex string, 2 characters / 1 byte
+   - MIME: application/vnd.lumenradio.net_rate
+   - Payload: Hex string, 2 characters / 1 byte
 5. Update interval - seconds between measurement
-  - MIME: application/vnd.lumenradio.update_interval
-  - Payload: Hex string, 4 charachters / 2 bytes, MSB first
+   - MIME: application/vnd.lumenradio.update_interval
+   - Payload: Hex string, 4 charachters / 2 bytes, MSB first
+
+The current commissioning status can be read via NFC. The same set of records
+is available, except for network key.
+
+When comissioned, the current network status is also available.
 
 Decomissioning
 --------------
@@ -58,13 +63,12 @@ To disable the node, use the same method as comissioning, but write:
 - Rate = ff
 - Update interval = ffff
 
-Local monitoring of sensor
---------------------------
+Local monitoring of sensor values
+---------------------------------
 
-The network configuration (except encryption key) is available via NFC.
-
-When the device is comissioned, the sensor values and network status is also
-available for verification.
+When the device is comissioned, the sensor values is available via NFC as
+fields in the NDEF records. The values is available as user-readable text
+under the MIME type application/vnd.lumenradio.sensor.\*
 
 Sensor values is updated at an inteval specified via update interval
 configuration
@@ -75,8 +79,8 @@ Packet format
 The sensor sends an UDP packet at port 7337 to the root node of the network
 containing:
 
-- 32 bytes sensor name, padded with zeroes. Note that a sensor name with 32
-  bytes may not have a null-byte termination
+- 32 bytes name of device, padded with zeroes. Note that a name with 32 bytes
+  may not have a null-byte termination
 - list of sensor values, 24 bytes each
   - 15 byte sensor name (battery, temperature, humidity, pressure), padded with
     zeroes. Note that a name of 15 bytes may not have null-byte-termination
@@ -99,7 +103,7 @@ Receving and presenting
 -----------------------
 
 An example script for receiving sensor updates, and publish to InfluxDB is
-provided as udp_to_influx.py
+provided as udp\_to\_influx.py
 
 The script is designed to work together with the Mira border gateway
 
