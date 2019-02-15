@@ -15,48 +15,43 @@
  */
 
 #include <mira.h>
-#include "sensor-battery.h"
-
 #include <string.h>
 
-PROCESS(sensor_battery_init, "Sensor: Battery voltage startup");
-PROCESS(sensor_battery_sample, "Sensor: Battery voltage reader");
+#include "network-metrics.h"
+
+extern int32_t drift_ppm;
+
+PROCESS(network_metrics_init, "Network metrics: startup");
+PROCESS(network_metrics_sample, "network_metrics: sample network metrics");
 
 PROCESS_THREAD(
-    sensor_battery_init,
+    network_metrics_init,
     ev,
     data)
 {
-    static sensor_battery_ctx_t *ctx;
+    static network_metrics_ctx_t *ctx;
 
     PROCESS_BEGIN();
 
     ctx = data;
 
-    memset(ctx, 0, sizeof(sensor_battery_ctx_t));
+    memset(ctx, 0, sizeof(network_metrics_ctx_t));
 
     PROCESS_PAUSE();
 
-    mira_adc_init(&ctx->adc);
-    mira_adc_set_source_single(&ctx->adc, MIRA_ADC_PIN_VDD);
-    mira_adc_set_reference(&ctx->adc, MIRA_ADC_REF_INT_3_6V);
-
-    //strcpy(ctx->val_battery.name, "battery");
-    ctx->val_battery.type = SENSOR_VALUE_TYPE_BATTERY;
-
+    ctx->etx.type = SENSOR_VALUE_TYPE_ETX;
+    ctx->clock_drift.type = SENSOR_VALUE_TYPE_CLOCK_DRIFT;
 
     PROCESS_END();
 }
 
 
 PROCESS_THREAD(
-    sensor_battery_sample,
+    network_metrics_sample,
     ev,
     data)
 {
-    static sensor_battery_ctx_t *ctx;
-
-    mira_adc_value_t value;
+    static network_metrics_ctx_t *ctx;
 
     PROCESS_BEGIN();
 
@@ -64,19 +59,11 @@ PROCESS_THREAD(
 
     PROCESS_PAUSE();
 
-    //ctx->val_battery.unit = SENSOR_VALUE_UNIT_NONE;
-    //ctx->val_battery.type = SENSOR_VALUE_TYPE_BATTERY;
-    ctx->val_battery.value_p = 0;
-    ctx->val_battery.value_q = 0;
+    ctx->etx.value_p = mira_net_get_parent_link_metric();
+    ctx->etx.value_q = 128;
 
-    mira_adc_measurement_start(&ctx->adc);
-    PROCESS_WAIT_WHILE(mira_adc_measurement_in_progress(&ctx->adc));
-    if(mira_adc_measurement_finish(&ctx->adc, &value) == MIRA_SUCCESS) {
-        //ctx->val_battery.unit = SENSOR_VALUE_UNIT_VOLT;
-        ctx->val_battery.value_p = value;
-        ctx->val_battery.value_q = 327680/36;
-    }
-
+    ctx->clock_drift.value_p = drift_ppm;
+    ctx->clock_drift.value_q = 256000000;
 
     PROCESS_END();
 }

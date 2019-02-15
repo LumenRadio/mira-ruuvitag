@@ -14,24 +14,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+#ifndef NETWORK_METRICS_H
+#define NETWORK_METRICS_H
+
+#include <mira.h>
 #include "sensor-value.h"
 
-const char *sensor_value_unit_name[] = {
-    [SENSOR_VALUE_TYPE_NONE] = "none",
-    [SENSOR_VALUE_TYPE_TEMPERATURE] = "deg C",
-    [SENSOR_VALUE_TYPE_PRESSURE] = "Pa",
-    [SENSOR_VALUE_TYPE_HUMIDITY] = "%",
-    [SENSOR_VALUE_TYPE_BATTERY] = "V",
-    [SENSOR_VALUE_TYPE_ETX] = "",
-    [SENSOR_VALUE_TYPE_CLOCK_DRIFT] = ""
-};
+typedef struct {
+    sensor_value_t etx;
+    sensor_value_t clock_drift;
+} network_metrics_ctx_t;
 
-const char *sensor_value_type_name[] = {
-    [SENSOR_VALUE_TYPE_NONE] = "none",
-    [SENSOR_VALUE_TYPE_TEMPERATURE] = "temperature",
-    [SENSOR_VALUE_TYPE_PRESSURE] = "pressure",
-    [SENSOR_VALUE_TYPE_HUMIDITY] = "humidity",
-    [SENSOR_VALUE_TYPE_BATTERY] = "battery",
-    [SENSOR_VALUE_TYPE_ETX] = "etx",
-    [SENSOR_VALUE_TYPE_CLOCK_DRIFT] = "clock_drift"
-};
+
+/**
+ * Call and wait to finish to start up
+ */
+PROCESS_NAME(network_metrics_init);
+
+/**
+ * Call and wait to finish sample data
+ */
+PROCESS_NAME(network_metrics_sample);
+
+#endif

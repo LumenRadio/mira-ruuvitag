@@ -16,6 +16,7 @@ SOURCE_FILES = \
 	sensor-value.c \
 	sensors.c \
 	sensors-sender.c \
-	spi-if.c
+	spi-if.c \
+	network-metrics.c
 
 include $(LIBDIR)/Makefile.include

@@ -30,19 +30,40 @@ typedef enum {
     SENSOR_VALUE_UNIT_VOLT
 } sensor_value_unit_t;
 
+typedef enum {
+    SENSOR_VALUE_TYPE_NONE = 0, /* No value set */
+    SENSOR_VALUE_TYPE_TEMPERATURE,
+    SENSOR_VALUE_TYPE_PRESSURE,
+    SENSOR_VALUE_TYPE_HUMIDITY,
+    SENSOR_VALUE_TYPE_BATTERY,
+    SENSOR_VALUE_TYPE_ETX,
+    SENSOR_VALUE_TYPE_CLOCK_DRIFT
+} sensor_value_type_t;
+
 /**
  * Storage of a sensor value, to easily handled over the air
  *
  * The value is sent as a rational value, name and a unit for easy
  * presentation
  */
+// old
+/*
 typedef struct {
     int32_t value_p;
     uint32_t value_q;
     sensor_value_unit_t unit;
     char name[16];
 } sensor_value_t;
+*/
+
+
+typedef struct {
+    int32_t value_p;
+    uint32_t value_q;
+    sensor_value_type_t type;
+} sensor_value_t;
 
 extern const char *sensor_value_unit_name[];
+extern const char *sensor_value_type_name[];
 
 #endif

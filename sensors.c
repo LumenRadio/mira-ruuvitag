@@ -20,6 +20,7 @@
 
 #include "sensor-battery.h"
 #include "sensor-bme280.h"
+#include "network-metrics.h"
 
 #include "sensors-sender.h"
 
@@ -41,6 +42,7 @@ typedef struct
  */
 static sensor_battery_ctx_t sensor_battery_ctx;
 static sensor_bme280_ctx_t sensor_bme280_ctx;
+static network_metrics_ctx_t network_metrics_ctx;
 
 /*
  * List of handlers
@@ -50,11 +52,14 @@ static const sensor_value_t *sensor_values[] = {
     &sensor_bme280_ctx.val_temperature,
     &sensor_bme280_ctx.val_humidity,
     &sensor_bme280_ctx.val_pressure,
+    &network_metrics_ctx.etx,
+    &network_metrics_ctx.clock_drift,
     NULL
 };
 static const sensor_handler_t sensor_handler[] = {
     { &sensor_battery_init, &sensor_battery_sample, &sensor_battery_ctx },
     { &sensor_bme280_init, &sensor_bme280_sample, &sensor_bme280_ctx },
+    { &network_metrics_init, &network_metrics_sample, &network_metrics_ctx },
     { NULL, NULL, NULL },
 };
 
@@ -104,7 +109,7 @@ PROCESS_THREAD(
     }
 
     /*
-     * Wait for all sesnors to finish starting up
+     * Wait for all sensors to finish starting up
      */
     for (i = 0; sensor_handler[i].init_proc != NULL; i++)
     {
@@ -142,7 +147,7 @@ PROCESS_THREAD(
         }
 
         /*
-         * Print and count sesnor values
+         * Print and count sensor values
          */
         printf("Sensor values:\n");
         sensor_count = 0;
@@ -151,10 +156,19 @@ PROCESS_THREAD(
             const sensor_value_t *val = sensor_values[i];
             printf(
                 "%16s = %10ld / %10lu %s\n",
+                sensor_value_type_name[val->type],
+                val->value_p,
+                val->value_q,
+                sensor_value_unit_name[val->type]);
+/* old
+            printf(
+                "%16s = %10ld / %10lu %s\n",
                 val->name,
                 val->value_p,
                 val->value_q,
                 sensor_value_unit_name[val->unit]);
+*/
+
             sensor_count++;
         }
 
@@ -199,14 +213,14 @@ static void sensors_nfc_on_open(
 
         sprintf(
             vendor,
-            "application/vnd.lumenradio.sesnor.%s",
-            sensor_values[i]->name);
+            "application/vnd.lumenradio.sensor.%s",
+            sensor_value_type_name[sensor_values[i]->type]);
         sprintf(
             value,
             "%ld.%03ld %s",
             val_int,
             val_fraq,
-            sensor_value_unit_name[val->unit]);
+            sensor_value_unit_name[val->type]);
 
         mira_nfc_ndef_write_copy(writer, MIRA_NFC_NDEF_TNF_MIME_TYPE,
             (const uint8_t *) vendor, strlen(vendor),
