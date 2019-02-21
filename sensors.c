@@ -160,14 +160,6 @@ PROCESS_THREAD(
                 val->value_p,
                 val->value_q,
                 sensor_value_unit_name[val->type]);
-/* old
-            printf(
-                "%16s = %10ld / %10lu %s\n",
-                val->name,
-                val->value_p,
-                val->value_q,
-                sensor_value_unit_name[val->unit]);
-*/
 
             sensor_count++;
         }

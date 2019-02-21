@@ -1,12 +1,14 @@
+#!/usr/bin/env python
+
 import socket
-#import influxdb
+import influxdb
 import datetime
 
 # Value processing
 
 class SampleValue:
     units = ['none', 'deg C', 'Pa', '%', 'V', '', '']
-    types = ['none', 'Temperature', 'Pressure', 'Humidity', 'Battery', 'ETX', 'Clock drift']
+    types = ['none', 'temperature', 'pressure', 'humidity', 'battery', 'etx', 'clock_drift']
 
     def __init__(self, raw):
     #    self.name = str(raw[0:15]).strip('\0')
@@ -26,7 +28,6 @@ class TagData:
     def __init__(self, raw):
         self.name = str(raw[0:32]).strip('\0')
         self.parent = str(raw[32:72]).strip('\0')
-        #self.host = host
         self.sensors = []
         for sensor_start in range(72,len(raw),9):
             self.sensors.append(SampleValue(raw[sensor_start:sensor_start+9]))
@@ -48,7 +49,7 @@ def udp_server(host='::', port=7338):
 # InfluxDB reporter
 
 class DBReporter:
-    types = ['none', 'Temperature', 'Pressure', 'Humidity', 'Battery', 'ETX', 'Clock drift']
+    types = ['none', 'temperature', 'pressure', 'humidity', 'battery', 'etx', 'clock_drift']
 
     def __init__(self, host, port, user, password, dbname):
         self.client = influxdb.InfluxDBClient(host, port, user, password, dbname)
@@ -59,7 +60,7 @@ class DBReporter:
         body = []
         for sensor in tagdata.sensors:
 
-            if sensor.types[sensor.type] == 'ETX':
+            if sensor.types[sensor.type] == 'etx':
                 fields = {
                     "etx": sensor.value,
                     "neigbour": tagdata.parent
@@ -77,7 +78,6 @@ class DBReporter:
                 "time": now,
                 "fields": fields
             })
-        #print body
         self.client.write_points(body)
 
 
@@ -88,5 +88,4 @@ db = DBReporter('localhost', 8086, 'monitoring', 'uploadstuff', 'monitoring')
 for tagdata, host, port in udp_server():
     now = datetime.datetime.now()
     print "[", now.strftime("%H:%M:%S"), "] host:", host, "sensor:", tagdata
-    #db.upload(tagdata)
-    db.upload2(tagdata)
+    db.upload(tagdata)

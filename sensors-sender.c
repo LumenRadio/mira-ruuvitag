@@ -106,11 +106,3 @@ void sensors_sender_send(
         payload,
         payload_len);
 }
-
-
-/* ATT ÄNDRA:
-* minska 15 bytes name till enbart 1 byte lista.
-* lägg till etx som mätvärde
-* lägg till drift som mätvärrde
-* lägg till parent efter name
-*/
