@@ -44,7 +44,7 @@ static const mira_net_config_t net_config = {
         0xfa, 0x89, 0x48, 0xd3
     },
     .mode = MIRA_NET_MODE_MESH,
-    .rate = MIRA_NET_RATE_FAST,
+    .rate = 8,
     .antenna = MIRA_NET_ANTENNA_ONBOARD,
     .prefix = NULL /* default prefix */
 };
