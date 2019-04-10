@@ -27,10 +27,10 @@ make flashall
 
 The tag should then be programmed
 
-Comissioning
+Commissioning
 ------------
 
-To comission the device, Use a phone and an NFC tag reader/writer app to write
+To commission the device, Use a phone and an NFC tag reader/writer app to write
 an NDEF file containing following records:
 
 1. Name
@@ -47,17 +47,17 @@ an NDEF file containing following records:
    - Payload: Hex string, 2 characters / 1 byte
 5. Update interval - seconds between measurement
    - MIME: application/vnd.lumenradio.update_interval
-   - Payload: Hex string, 4 charachters / 2 bytes, MSB first
+   - Payload: Hex string, 4 characters / 2 bytes, MSB first
 
 The current commissioning status can be read via NFC. The same set of records
 is available, except for network key.
 
-When comissioned, the current network status is also available.
+When commissioned, the current network status is also available.
 
-Decomissioning
+Decommissioning
 --------------
 
-To disable the node, use the same method as comissioning, but write:
+To disable the node, use the same method as commissioning, but write:
 - PAN-ID = ffffffff
 - Encryption key = ffffffffffffffffffffffffffffffff
 - Rate = ff
@@ -66,11 +66,11 @@ To disable the node, use the same method as comissioning, but write:
 Local monitoring of sensor values
 ---------------------------------
 
-When the device is comissioned, the sensor values is available via NFC as
+When the device is commissioned, the sensor values is available via NFC as
 fields in the NDEF records. The values is available as user-readable text
 under the MIME type application/vnd.lumenradio.sensor.\*
 
-Sensor values is updated at an inteval specified via update interval
+Sensor values is updated at an interval specified via update interval
 configuration
 
 Packet format
@@ -81,15 +81,15 @@ containing:
 
 - 32 bytes name of device, padded with zeroes. Note that a name with 32 bytes
   may not have a null-byte termination
-- list of sensor values, 24 bytes each
-  - 15 byte sensor name (battery, temperature, humidity, pressure), padded with
-    zeroes. Note that a name of 15 bytes may not have null-byte-termination
-  - 1 byte unit:
-    - 0 = no value
-    - 1 = Degrees celcius
-    - 2 = Pascal
-    - 4 = Percent
-    - 5 = Volt
+- list of sensor values, 9 bytes each
+  - 1 byte type:
+    - 0 = no type
+    - 1 = Temperature
+    - 2 = Pressure
+    - 4 = Humidity
+    - 5 = Battery
+    - 6 = ETX
+    - 7 = Clock drift
   - 4 bytes, MSB first, signed, sensor P value
   - 4 bytes, MSB first, unsigned, sensor Q value
 
@@ -99,7 +99,7 @@ value, calculate P/Q
 This method makes it possible for the sensor to provide a proper range and
 resolution for presentation
 
-Receving and presenting
+Receiving and presenting
 -----------------------
 
 An example script for receiving sensor updates, and publish to InfluxDB is
@@ -130,5 +130,3 @@ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
-
-
