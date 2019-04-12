@@ -4,6 +4,30 @@ import socket
 import influxdb
 import datetime
 
+
+# Calculate number of hops towards root.
+
+class CalculateNbrOfHops:
+    def __init__(self, root):
+        self.dict_address_parent = {}
+        self.root_address = root
+
+    def calc_hops(self, host, parent_address):
+        nbr_of_hops = 1
+        # key is the host, value is the parent
+        self.dict_address_parent[host] = parent_address
+        # Will add if the host if not present, otherwise update
+
+        while (parent_address != self.root_address):
+            nbr_of_hops = nbr_of_hops + 1
+
+            parent_address = self.dict_address_parent.get(parent_address)
+            if (parent_address == None or nbr_of_hops > 50):
+                return -1
+                # Saftey if stuck in loop or parent not present
+
+        return nbr_of_hops
+
 # Value processing
 
 class SampleValue:
@@ -51,9 +75,9 @@ def udp_server(host='::', port=7338):
 class DBReporter:
     types = ['none', 'temperature', 'pressure', 'humidity', 'battery', 'etx', 'clock_drift']
 
-    def __init__(self, host, port, user, password, dbname):
+    def __init__(self, host, port, user, password, dbname, root):
         self.client = influxdb.InfluxDBClient(host, port, user, password, dbname)
-
+        self.calc_hops = CalculateNbrOfHops(root)
 
     def upload(self, tagdata):
         now = datetime.datetime.utcnow().isoformat() + 'Z'
@@ -63,7 +87,8 @@ class DBReporter:
             if sensor.types[sensor.type] == 'etx':
                 fields = {
                     "etx": sensor.value,
-                    "neigbour": tagdata.parent
+                    "neigbour": tagdata.parent,
+                    "hops": self.calc_hops.calc_hops(host, tagdata.parent)
                 }
             else:
                 fields = {
@@ -83,7 +108,7 @@ class DBReporter:
 
 # Main
 
-db = DBReporter('localhost', 8086, 'monitoring', 'uploadstuff', 'monitoring')
+db = DBReporter('localhost', 8086, 'monitoring', 'uploadstuff', 'monitoring', "fd00::75c4:e996:a200:cf7b")
 
 for tagdata, host, port in udp_server():
     now = datetime.datetime.now()
