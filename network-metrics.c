@@ -16,10 +16,11 @@
 
 #include <mira.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "network-metrics.h"
 
-//extern int32_t drift_ppm;
+extern int32_t slotop_timesync_drift_ppm;
 
 PROCESS(network_metrics_init, "Network metrics: startup");
 PROCESS(network_metrics_sample, "network_metrics: sample network metrics");
@@ -36,6 +37,8 @@ PROCESS_THREAD(
     ctx = data;
 
     memset(ctx, 0, sizeof(network_metrics_ctx_t));
+
+    printf("Network metrics started\n");
 
     PROCESS_PAUSE();
 
@@ -62,7 +65,7 @@ PROCESS_THREAD(
     ctx->etx.value_p = mira_net_get_parent_link_metric();
     ctx->etx.value_q = 128;
 
-    ctx->clock_drift.value_p = 0; // drift_ppm;
+    ctx->clock_drift.value_p = slotop_timesync_drift_ppm;
     ctx->clock_drift.value_q = 256000000;
 
     PROCESS_END();

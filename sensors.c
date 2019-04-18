@@ -26,6 +26,7 @@
 
 #include "nfc-if.h"
 #include "app-config.h"
+#include "board.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -40,26 +41,45 @@ typedef struct
 /*
  * Sensors
  */
+#if BATTERY_ENABLED
 static sensor_battery_ctx_t sensor_battery_ctx;
+#endif
+#if BME280_ENABLED
 static sensor_bme280_ctx_t sensor_bme280_ctx;
+#endif
+#if NETWORK_METRICS_ENABLED
 static network_metrics_ctx_t network_metrics_ctx;
-
+#endif
 /*
  * List of handlers
  */
 static const sensor_value_t *sensor_values[] = {
+#if BATTERY_ENABLED
     &sensor_battery_ctx.val_battery,
+#endif
+#if BME280_ENABLED
     &sensor_bme280_ctx.val_temperature,
     &sensor_bme280_ctx.val_humidity,
     &sensor_bme280_ctx.val_pressure,
+#endif
+#if NETWORK_METRICS_ENABLED
     &network_metrics_ctx.etx,
     &network_metrics_ctx.clock_drift,
+#endif
     NULL
 };
+
+
 static const sensor_handler_t sensor_handler[] = {
-    { &sensor_battery_init, &sensor_battery_sample, &sensor_battery_ctx },
+#if BATTERY_ENABLED
+    { BATTERY_ENABLED, &sensor_battery_init, &sensor_battery_sample, &sensor_battery_ctx },
+#endif
+#if BME280_ENABLED
     { &sensor_bme280_init, &sensor_bme280_sample, &sensor_bme280_ctx },
+#endif
+#if NETWORK_METRICS_ENABLED
     { &network_metrics_init, &network_metrics_sample, &network_metrics_ctx },
+#endif
     { NULL, NULL, NULL },
 };
 

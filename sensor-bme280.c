@@ -53,10 +53,6 @@ PROCESS_THREAD(
     ctx->val_pressure.type = SENSOR_VALUE_TYPE_PRESSURE;
     ctx->val_humidity.type = SENSOR_VALUE_TYPE_HUMIDITY;
 
-    //strcpy(ctx->val_temperature.name, "temperature");
-    //strcpy(ctx->val_humidity.name, "humidity");
-    //strcpy(ctx->val_pressure.name, "pressure");
-
     printf("bme280 started\n");
 
     PROCESS_PAUSE();
@@ -161,26 +157,12 @@ PROCESS_THREAD(
 
     ctx->val_temperature.value_p = value_T;
     ctx->val_temperature.value_q = 5120;
-    //ctx->val_temperature.type = SENSOR_VALUE_TYPE_TEMPERATURE;
+    
     ctx->val_pressure.value_p = value_P;
     ctx->val_pressure.value_q = 256;
-    //ctx->val_pressure.type = SENSOR_VALUE_TYPE_PRESSURE;
+
     ctx->val_humidity.value_p = value_H;
     ctx->val_humidity.value_q = 1024;
-    //ctx->val_humidity.type = SENSOR_VALUE_TYPE_HUMIDITY;
-
-/* old
-    ctx->val_temperature.value_p = value_T;
-    ctx->val_temperature.value_q = 5120;
-    ctx->val_temperature.unit = SENSOR_VALUE_UNIT_DEG_C;
-    ctx->val_pressure.value_p = value_P;
-    ctx->val_pressure.value_q = 256;
-    ctx->val_pressure.unit = SENSOR_VALUE_UNIT_PASCAL;
-    ctx->val_humidity.value_p = value_H;
-    ctx->val_humidity.value_q = 1024;
-    ctx->val_humidity.unit = SENSOR_VALUE_UNIT_PERCENT;
-
-    */
 
     PROCESS_END();
 }
