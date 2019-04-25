@@ -8,7 +8,7 @@ Build and installation
 ----------------------
 
 Setup the toolchain according to:
-https://docs.lumenrad.io/miraos/toolchain/
+https://docs.lumenrad.io/miraos/description/toolchain/
 
 The software is built to work with MiraOS version 2.2.2 or later.
 
