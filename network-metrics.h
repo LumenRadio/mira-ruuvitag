@@ -23,7 +23,9 @@
 
 typedef struct {
     sensor_value_t etx;
+#if NETWORK_METRICS_DRIFT_ENABLED
     sensor_value_t clock_drift;
+#endif
 } network_metrics_ctx_t;
 
 

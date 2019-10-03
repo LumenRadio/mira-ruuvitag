@@ -64,7 +64,9 @@ static const sensor_value_t *sensor_values[] = {
 #endif
 #if NETWORK_METRICS_ENABLED
     &network_metrics_ctx.etx,
+#if NETWORK_METRICS_DRIFT_ENABLED
     &network_metrics_ctx.clock_drift,
+#endif
 #endif
     NULL
 };

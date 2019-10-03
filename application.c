@@ -36,7 +36,7 @@ PROCESS_THREAD(main_proc, ev, data) {
     memcpy(netconf.key, app_config.net_key, 16);
     netconf.mode = MIRA_NET_MODE_MESH;
     netconf.rate = app_config.net_rate;
-    netconf.antenna = MIRA_NET_ANTENNA_ONBOARD;
+    netconf.antenna = 0;
 
     mira_net_init(&netconf);
 
