@@ -29,6 +29,8 @@ void mira_setup(
 {
     board_setup();
 
+    MIRA_MEM_SET_BUFFER(15000);
+
     process_start(&boot_proc, NULL);
 }
 
