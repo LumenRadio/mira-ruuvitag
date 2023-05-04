@@ -1,6 +1,6 @@
 PROJECT_NAME = ruuvimira
 
-TARGET ?= nrf52832-mesh
+TARGET ?= nrf52832ble-os
 LIBDIR ?= $(CURDIR)/../mira/build/libmira
 
 SOURCE_FILES = \

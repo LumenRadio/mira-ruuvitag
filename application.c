@@ -27,7 +27,8 @@
 PROCESS(main_proc, "Main process");
 
 PROCESS_THREAD(main_proc, ev, data) {
-    mira_net_config_t netconf;
+    static mira_net_config_t netconf;
+    mira_status_t res;
     PROCESS_BEGIN();
 
     printf("Main process started\n");
@@ -37,8 +38,13 @@ PROCESS_THREAD(main_proc, ev, data) {
     netconf.mode = MIRA_NET_MODE_MESH;
     netconf.rate = app_config.net_rate;
     netconf.antenna = 0;
+    netconf.prefix = NULL;
 
-    mira_net_init(&netconf);
+    res = mira_net_init(&netconf);
+
+    if (res != MIRA_SUCCESS){
+        printf("!mira_net_init returned: %d\n", res);
+    }
 
     net_status_init();
 

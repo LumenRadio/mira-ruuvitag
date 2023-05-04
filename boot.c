@@ -27,8 +27,8 @@ PROCESS(boot_proc, "Boot process");
 void mira_setup(
     void)
 {
+    MIRA_MEM_SET_BUFFER(10000);
     board_setup();
-
     process_start(&boot_proc, NULL);
 }
 
