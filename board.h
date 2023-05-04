@@ -19,7 +19,7 @@
 
 #include <mira.h>
 
-#define board_selection 1
+#define board_selection 0
 
 /*
     * 0 = Ruuvi-tag

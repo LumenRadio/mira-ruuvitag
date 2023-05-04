@@ -74,7 +74,7 @@ static const sensor_value_t *sensor_values[] = {
 
 static const sensor_handler_t sensor_handler[] = {
 #if BATTERY_ENABLED
-    { BATTERY_ENABLED, &sensor_battery_init, &sensor_battery_sample, &sensor_battery_ctx },
+    { &sensor_battery_init, &sensor_battery_sample, &sensor_battery_ctx },
 #endif
 #if BME280_ENABLED
     { &sensor_bme280_init, &sensor_bme280_sample, &sensor_bme280_ctx },
