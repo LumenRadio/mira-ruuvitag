@@ -15,8 +15,8 @@ HW_REVISION ?= v8
 
 LDFLAGS=-lm
 
-SDKDIR = $(CURDIR)/src/vendor/nrf5-sdk
-LIBDIR = $(CURDIR)/src/vendor/libmira
+SDKDIR = src/vendor/nrf5-sdk
+LIBDIR = src/vendor/libmira
 
 # include all the SDK dependencies
 CFLAGS += -I$(SDKDIR)/integration/nrfx/legacy
@@ -38,10 +38,10 @@ CFLAGS += -I$(SDKDIR)/components/libraries/delay
 CFLAGS += -I$(BUILD_DIR)/
 CFLAGS += -I$(BUILD_DIR)/config
 
-RUUIV_APP_DIR = $(CURDIR)/src/application
-BOARDS_DIR = $(CURDIR)/boards
-DRIVERS_DIR = $(CURDIR)/src/drivers
-SENSORS_DIR = $(CURDIR)/src/sensors
+RUUIV_APP_DIR = src/application
+BOARDS_DIR = boards
+DRIVERS_DIR = src/drivers
+SENSORS_DIR = src/sensors
 
 # include ruuvi application dependencies
 CFLAGS += -I$(RUUIV_APP_DIR)
@@ -49,8 +49,8 @@ CFLAGS += -I$(BOARDS_DIR)
 CFLAGS += -I$(DRIVERS_DIR)/nfc
 CFLAGS += -I$(DRIVERS_DIR)/nrf-gpiote
 CFLAGS += -I$(DRIVERS_DIR)/spi
-CFLAGS += -I$(CURDIR)/src/net-status
-CFLAGS += -I$(CURDIR)/src/network-metrics
+CFLAGS += -Isrc/net-status
+CFLAGS += -Isrc/network-metrics
 CFLAGS += -I$(SENSORS_DIR)/battery
 CFLAGS += -I$(SENSORS_DIR)/bme280
 CFLAGS += -I$(SENSORS_DIR)/lis2dh12
@@ -81,7 +81,7 @@ SOURCE_FILES = \
 	$(RUUIV_APP_DIR)/application.c \
 	$(RUUIV_APP_DIR)/board.c \
 	$(RUUIV_APP_DIR)/boot.c \
-	$(CURDIR)/src/net-status/net-status.c \
+	src/net-status/net-status.c \
 	$(DRIVERS_DIR)/nfc/nfc-if.c \
 	$(SENSORS_DIR)/battery/sensor-battery.c \
 	$(SENSORS_DIR)/bme280/sensor-bme280.c \
@@ -89,7 +89,7 @@ SOURCE_FILES = \
 	$(RUUIV_APP_DIR)/sensor-value.c \
 	$(RUUIV_APP_DIR)/sensors.c \
 	$(RUUIV_APP_DIR)/sensors-sender.c \
-	$(CURDIR)/src/network-metrics/network-metrics.c \
+	src/network-metrics/network-metrics.c \
 	$(SENSORS_DIR)/lis2dh12/sensor-lis2dh12.c \
 	$(DRIVERS_DIR)/spi/spi-if.c \
 	$(DRIVERS_DIR)/nrf-gpiote/gpiote-nrf-drv.c \
