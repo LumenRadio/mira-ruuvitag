@@ -1,7 +1,7 @@
 # Commision
  1. Name
    - MIME: application/vnd.lumenradio.name
-   - Payload: Name of the device, string up to 32 characters
+   - Payload: Name of the device, string up to 16 characters
 2. Network PAN ID
    - MIME: application/vnd.lumenradio.net_panid
    - Payload: Hex, 8 characters / 4 bytes, MSB first: 13243546
@@ -51,13 +51,10 @@ containing:
     - 3 = Humidity
     - 4 = Battery
     - 5 = ETX
-    - 6 = Clock drift
-    - 7 = CO2
-    - 8 = Acc_x
-    - 9 = Acc_y
-    - 10 = Acc_z
-    - 11 = Move count
-    - 12 = seq num
+    - 6 = Acc_x
+    - 7 = Acc_y
+    - 8 = Acc_z
+    - 9 = Move count
   - 4 bytes, MSB first, signed, sensor P value
   - 4 bytes, MSB first, unsigned, sensor Q value
 
@@ -67,4 +64,4 @@ value, calculate P/Q.
 This method makes it possible for the sensor to provide a proper range and
 resolution for presentation.
 
-With this format 11 sensor values can be added before fragmentation occurs.
+With this format 10 sensor values can be added before fragmentation occurs.
