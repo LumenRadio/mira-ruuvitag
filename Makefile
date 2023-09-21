@@ -7,7 +7,7 @@ CFLAGS += -I$(REPODIR)/sdk_config
 # Dummy target, to ensure it's the first one
 all:
 
-PROJECT_NAME = mira-demo
+PROJECT_NAME = mira-ruuvitag
 
 TARGET ?= nrf52832ble-os
 
