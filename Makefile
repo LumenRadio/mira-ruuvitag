@@ -34,14 +34,14 @@ CFLAGS += -I$(SDKDIR)/components/libraries/experimental_section_vars
 CFLAGS += -I$(SDKDIR)/components/libraries/log/src
 CFLAGS += -I$(SDKDIR)/components/libraries/delay
 
-# include build dependencies
-CFLAGS += -I$(BUILD_DIR)/
-CFLAGS += -I$(BUILD_DIR)/config
 
 RUUIV_APP_DIR = src/application
 BOARDS_DIR = boards
 DRIVERS_DIR = src/drivers
 SENSORS_DIR = src/sensors
+
+# Update the ISR table to have both Mira and nRF SDK
+ISR_VECTOR_FILE = $(RUUIV_APP_DIR)/isr_vector.c
 
 # include ruuvi application dependencies
 CFLAGS += -I$(RUUIV_APP_DIR)
