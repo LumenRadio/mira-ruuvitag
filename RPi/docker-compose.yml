@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  influxdb:
+    image: influxdb:1.8.0
+    ports:
+      - "127.0.0.1:8086:8086"
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+      - ./services/influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.1.2
+    ports:
+      - "3000:3000"
+    depends_on:
+      - influxdb
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=natel-discrete-panel
+    restart: unless-stopped
+    volumes: 
+      - grafana-data:/var/lib/grafana
+      - ./services/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ./services/grafana/dashboard.yml:/etc/grafana/provisioning/dashboards/main.yml
+      - ./services/grafana/dashboards:/var/lib/grafana/dashboards
+
+  udp-to-influx:
+    build: ./services/udp-to-influx/
+    network_mode: host
+    depends_on:
+      - influxdb
+    restart: unless-stopped
+    
+volumes:
+  influxdb-data:
+  grafana-data:
