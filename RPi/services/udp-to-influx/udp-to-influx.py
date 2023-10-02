@@ -5,7 +5,7 @@ import influxdb
 import datetime
 import math
 
-_units = ['none', 'deg C', 'Pa', '%', 'V', '', 'mg', 'mg', 'mg', '', '']
+_units = ['none', 'deg C', 'Pa', '%', 'V', '', 'mg', 'mg', 'mg', '']
 _types = ['none', 'temperature', 'pressure', 'humidity', 'battery', 'etx', 'acc_x', 'acc_y', 'acc_z', 'move_count']
 root_addr = "fd00::b0e9:c734:1806:20d1"
 pdr_dict = { root_addr:0 }
@@ -38,10 +38,8 @@ class SampleValue:
 
     def __init__(self, raw):
         self.type = raw[0]
-        value_p = sum([v<<(8*(3-i)) for i,v in enumerate(raw[1:5])])
-        if value_p & 0x80000000:
-            value_p -= 0x100000000
-        value_q = sum([v<<(8*(3-i)) for i,v in enumerate(raw[5:9])])
+        value_p = int.from_bytes(raw[1:5], 'big', signed=True)
+        value_q = int.from_bytes(raw[5:9], 'big', signed=False)
         if value_q != 0:
             self.value = float(value_p) / value_q
         else:
