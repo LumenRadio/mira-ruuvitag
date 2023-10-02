@@ -21,6 +21,9 @@
 #include <stdio.h>
 
 #define SENSOR_PORT 7338
+/* To avoid fragmentation, prevent packet size from being larger than 160 bytes. Therefore, only
+ * (160-16-40-4)/9 = 11 sensors values may be sent */
+#define MAX_SENSOR_VALUES 11
 
 void sensors_sender_init(
     sensors_sender_context_t *ctx)
@@ -58,9 +61,6 @@ void sensors_sender_send(
         mira_net_toolkit_format_address(parent_address_str, &parent_address);
     }
 
-    /* The seq number changes here, only if message is sent */
-    ctx->seq_no++;
-
     /*
      * Format is:
      * - 16 bytes name
@@ -71,13 +71,7 @@ void sensors_sender_send(
      * - 1 byte type
      * - 4 byte value, signed int , MSB first
      * - 4 byte fix point, unsigned int, MSB first
-     *
-     * To avoid fragmentation, prevent packet size from being larger than 160 bytes. Therefore, only
-     * (160-16-40-4)/9 = 11 sensors values may be sent
      */
-    if (num_values > 11) {
-        num_values = 11;
-    }
 
     payload_len = 0;
 
@@ -87,18 +81,25 @@ void sensors_sender_send(
         MIRA_NET_MAX_ADDRESS_STR_LEN);
     payload_len += MIRA_NET_MAX_ADDRESS_STR_LEN;
 
-    for (i = 0; i < num_values; i++) {
-        /* Modify the seq num of the HB */
-        const uint32_t seq = ctx->seq_no - 1;
+    int nrof_added_values = 0;
+    for (i = 0; values[i] != NULL; i++) {
+        if (nrof_added_values >= MAX_SENSOR_VALUES) {
+            break;
+        }
+        if (values[i]->type == SENSOR_VALUE_TYPE_NONE) {
+            // Skip uniniatlized sensors
+            continue;
+        }
 
         const sensor_value_t *val = values[i];
         payload[payload_len + 0] = values[i]->type;
-
         if (values[i]->type == SENSOR_VALUE_TYPE_SEQ_NO) {
+            const int seq = ctx->seq_no;
             payload[payload_len + 1] = (seq >> 24) & 0xff;
             payload[payload_len + 2] = (seq >> 16) & 0xff;
             payload[payload_len + 3] = (seq >> 8) & 0xff;
             payload[payload_len + 4] = (seq >> 0) & 0xff;
+            ctx->seq_no++;
         } else {
             payload[payload_len + 1] = (val->value_p >> 24) & 0xff;
             payload[payload_len + 2] = (val->value_p >> 16) & 0xff;
@@ -111,6 +112,7 @@ void sensors_sender_send(
         payload[payload_len + 7] = (val->value_q >> 8) & 0xff;
         payload[payload_len + 8] = (val->value_q >> 0) & 0xff;
         payload_len += 9;
+        nrof_added_values += 1;
     }
 
     mira_net_udp_send_to(
