@@ -27,7 +27,6 @@ const char *sensor_value_unit_name[] = {
     [SENSOR_VALUE_TYPE_ACC_Y] = "mg",
     [SENSOR_VALUE_TYPE_ACC_Z] = "mg",
     [SENSOR_VALUE_TYPE_MOVE_COUNT] = "",
-    [SENSOR_VALUE_TYPE_SEQ_NO] = ""
 };
 
 const char *sensor_value_type_name[] = {
@@ -41,5 +40,4 @@ const char *sensor_value_type_name[] = {
     [SENSOR_VALUE_TYPE_ACC_Y] = "acc_y",
     [SENSOR_VALUE_TYPE_ACC_Z] = "acc_z",
     [SENSOR_VALUE_TYPE_MOVE_COUNT] = "move_count",
-    [SENSOR_VALUE_TYPE_SEQ_NO] = "seq_no"
 };

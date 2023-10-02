@@ -25,10 +25,6 @@ typedef struct {
     mira_bool_t sensor_available;
 } network_metrics_ctx_t;
 
-typedef struct {
-    sensor_value_t seq_no;
-} seq_no_ctx_t;
-
 /**
  * Call and wait to finish to start up
  */

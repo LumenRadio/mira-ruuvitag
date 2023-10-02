@@ -6,7 +6,7 @@ import datetime
 import math
 
 _units = ['none', 'deg C', 'Pa', '%', 'V', '', 'mg', 'mg', 'mg', '', '']
-_types = ['none', 'temperature', 'pressure', 'humidity', 'battery', 'etx', 'acc_x', 'acc_y', 'acc_z', 'move_count','seq_no']
+_types = ['none', 'temperature', 'pressure', 'humidity', 'battery', 'etx', 'acc_x', 'acc_y', 'acc_z', 'move_count']
 root_addr = "fd00::b0e9:c734:1806:20d1"
 pdr_dict = { root_addr:0 }
 # Calculate number of hops towards root.
@@ -57,13 +57,14 @@ class TagData:
     def __init__(self, raw):
         self.name = (raw[0:16]).decode('utf-8')
         self.parent = (raw[16:56]).decode('utf-8')
+        self.seq_no = int.from_bytes(raw[56:60], 'big')
         self.sensors = []
-        for sensor_start in range(56,len(raw),9):
+        for sensor_start in range(60,len(raw),9):
             self.sensors.append(SampleValue(raw[sensor_start:sensor_start+9]))
 
     def __str__(self):
         sensor_str = " ".join([str(sensor) for sensor in self.sensors])
-        return f"{self.name}: parent = {self.parent} {sensor_str}"
+        return f"{self.name}: parent = {self.parent} seq_no = {self.seq_no} {sensor_str}"
 
 # Packet receiver
 
@@ -126,11 +127,6 @@ class DBReporter:
                         "neigbour": tagdata.parent,
                         "hops": hops
                    }
-                elif _types[sensor.type] == 'seq_no':
-                    pdr = calculate_pdr(host, sensor.value)
-                    fields = {
-                        "pdr": pdr,
-                    }
                 else:
                     fields = {
                         "value": sensor.value,
@@ -148,6 +144,21 @@ class DBReporter:
                 })
             else:
                 print("IndexError: skipping this value")
+
+        # Add pdr
+        pdr = calculate_pdr(host, tagdata.seq_no)
+        body.append({
+            "measurement": 'seq_no',
+            "tags": {
+                "sensor": tagdata.name,
+                "address": host,
+            },
+            "time": now,
+            "fields": {
+                "pdr": pdr,
+             }
+        })
+
         # Add acc_rms
         acc_rms = math.sqrt(acc_avg)
         body.append({

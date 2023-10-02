@@ -42,8 +42,6 @@ typedef enum {
     SENSOR_VALUE_TYPE_ACC_Y,
     SENSOR_VALUE_TYPE_ACC_Z,
     SENSOR_VALUE_TYPE_MOVE_COUNT,
-    SENSOR_VALUE_TYPE_SEQ_NO
-
 } sensor_value_type_t;
 
 typedef struct {
