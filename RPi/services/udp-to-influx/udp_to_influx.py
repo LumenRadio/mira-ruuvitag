@@ -7,8 +7,7 @@ import math
 
 _units = ['none', 'deg C', 'Pa', '%', 'V', '', 'mg', 'mg', 'mg', '']
 _types = ['none', 'temperature', 'pressure', 'humidity', 'battery', 'etx', 'acc_x', 'acc_y', 'acc_z', 'move_count']
-root_addr = "fd00::b0e9:c734:1806:20d1"
-pdr_dict = { root_addr:0 }
+pdr_dict = {}
 # Calculate number of hops towards root.
 
 class CalculateNbrOfHops:
@@ -17,20 +16,32 @@ class CalculateNbrOfHops:
         self.root_address = root
 
     def calc_hops(self, host, parent_address):
-        nbr_of_hops = 1
         # key is the host, value is the parent
         self.dict_address_parent[host] = parent_address
         # Will add if the host if not present, otherwise update
 
-        while (parent_address != self.root_address):
-            nbr_of_hops = nbr_of_hops + 1
+       # If we have a root address given, use that
+        if self.root_address:
+            nbr_of_hops = 1
+            while (parent_address != self.root_address):
+                nbr_of_hops = nbr_of_hops + 1
 
-            parent_address = self.dict_address_parent.get(parent_address)
-            if (parent_address == None or nbr_of_hops > 30):
-                # Safety if stuck in loop or parent is not present
-                return -1
+                parent_address = self.dict_address_parent.get(parent_address)
+                if (parent_address == None or nbr_of_hops > 30):
+                    # Safety if stuck in loop or parent is not present
+                    return -1
+            return nbr_of_hops
+        # If no root address given, just follow the parents up until we hit None. Most likely this is root
+        else:
+            nbr_of_hops = 0
+            while(parent_address != None):
+                nbr_of_hops += 1
+                parent_address = self.dict_address_parent.get(parent_address)
+                if (nbr_of_hops > 30):
+                    # Safe if stuck in loop
+                    return -1
 
-        return nbr_of_hops
+            return nbr_of_hops
 
 # Value processing
 
@@ -177,7 +188,7 @@ class DBReporter:
 def main():
     # Main
 
-    db = DBReporter('localhost', 8086, 'mirauser', 'mirapassword', 'miradb', root_addr)
+    db = DBReporter('localhost', 8086, 'mirauser', 'mirapassword', 'miradb')
 
     for tagdata, host, port in udp_server():
         db.upload(tagdata, host)
