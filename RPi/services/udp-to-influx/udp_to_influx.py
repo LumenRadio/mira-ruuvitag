@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
+import os
 import socket
+import ipaddress
 import influxdb
 import datetime
 import math
 
 _units = ['none', 'deg C', 'Pa', '%', 'V', '', 'mg', 'mg', 'mg', '']
 _types = ['none', 'temperature', 'pressure', 'humidity', 'battery', 'etx', 'acc_x', 'acc_y', 'acc_z', 'move_count']
-root_addr = "fd00::b0e9:c734:1806:20d1"
-pdr_dict = { root_addr:0 }
+pdr_dict = {}
 # Calculate number of hops towards root.
 
 class CalculateNbrOfHops:
@@ -17,20 +18,33 @@ class CalculateNbrOfHops:
         self.root_address = root
 
     def calc_hops(self, host, parent_address):
-        nbr_of_hops = 1
         # key is the host, value is the parent
         self.dict_address_parent[host] = parent_address
         # Will add if the host if not present, otherwise update
 
-        while (parent_address != self.root_address):
-            nbr_of_hops = nbr_of_hops + 1
+       # If we have a root address given, use that
+        if self.root_address:
+            nbr_of_hops = 1
+            # Expand ipv6 addresses from possibly abbreviated form before comparing
+            while (parse_ipv6_address(parent_address) != parse_ipv6_address(self.root_address)):
+                nbr_of_hops = nbr_of_hops + 1
 
-            parent_address = self.dict_address_parent.get(parent_address)
-            if (parent_address == None or nbr_of_hops > 30):
-                # Safety if stuck in loop or parent is not present
-                return -1
+                parent_address = self.dict_address_parent.get(parent_address)
+                if (parent_address == None or nbr_of_hops > 30):
+                    # Safety if stuck in loop or parent is not present
+                    return -1
+            return nbr_of_hops
+        # If no root address given, just follow the parents up until we hit None. Most likely this is root
+        else:
+            nbr_of_hops = 0
+            while(parent_address != None):
+                nbr_of_hops += 1
+                parent_address = self.dict_address_parent.get(parent_address)
+                if (nbr_of_hops > 30):
+                    # Safe if stuck in loop
+                    return -1
 
-        return nbr_of_hops
+            return nbr_of_hops
 
 # Value processing
 
@@ -53,8 +67,8 @@ class SampleValue:
 
 class TagData:
     def __init__(self, raw):
-        self.name = (raw[0:16]).decode('utf-8')
-        self.parent = (raw[16:56]).decode('utf-8')
+        self.name = raw[0:16].decode('utf-8')
+        self.parent = raw[16:56].rstrip(b'\x00').decode('utf-8')
         self.seq_no = int.from_bytes(raw[56:60], 'big')
         self.sensors = []
         for sensor_start in range(60,len(raw),9):
@@ -174,10 +188,28 @@ class DBReporter:
         now = datetime.datetime.now()
         print("[{}] host: {}, hops: {}, sensor: {}".format( now.strftime("%H:%M:%S"), host, hops, tagdata))
 
+def parse_ipv6_address(string):
+    try:
+        expanded_ipv6 = ipaddress.IPv6Address(string).exploded
+    except ValueError:
+        msg = f"{string} is not a valid IPv6 address"
+        raise ValueError(msg)
+    return expanded_ipv6
 
-# Main
-db = DBReporter('localhost', 8086, 'mirauser', 'mirapassword', 'miradb', root_addr)
+def main():
 
-for tagdata, host, port in udp_server():
-    db.upload(tagdata, host)
+    root_addr = os.environ.get("ROOT_ADDR", None)
+    if root_addr is not None and root_addr != "":
+        root_addr = parse_ipv6_address(root_addr)
+        print(f"Starting udp-to-influx with root address set to {root_addr}")
+    else:
+        print(f"Starting udp-to-influx with no root address set. Falling back on automatic detection of root for hops calculations.")
+
+    db = DBReporter('localhost', 8086, 'mirauser', 'mirapassword', 'miradb', root_addr)
+
+    for tagdata, host, port in udp_server():
+        db.upload(tagdata, host)
+
+if __name__ == "__main__":
+    main()
 

@@ -114,6 +114,27 @@ The encryption key and Network PAN ID needs to be the same as used by the gatewa
 The current commissioning status can be read via NFC. 
 A commissioned node will report its network status. It should go from "not associated" to "associated" and then finally "joined" indicating that the node has sucessfully joined the network.
 
+## Look at the dashboard
+
+You should now be able to see the grafana dashboard at <raspberry_pi_ip>:3000. The dashboard contains the different Ruuvi tag sensors data and some network information from Mira such as the amount of hops from each node to root, the packet delivery rate from tag to root, the parent of each tag and the link quality between each child and parent in the mesh network.
+
+The number of hops from each node is estimated by the udp-to-influx service. Improve this estimate by providing the root address of the network. The root address can be found by
+```
+journalctl -u mira-gateway.service | grep "Root address"
+```
+
+Provide this address to udp-to-influx by
+```
+cd /<absolute_path>/RPi
+ROOT_ADDR=<root IPv6 address> docker compose up -d udp-to-influx
+```
+or
+```
+cd /<absolute_path>/RPi
+echo "ROOT_ADDR=<root IPv6 address>" > .env
+docker compose up -d udp-to-influx
+```
+
 Disclaimer
 ----------
 

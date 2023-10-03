@@ -30,6 +30,8 @@ services:
   udp-to-influx:
     build: ./services/udp-to-influx/
     network_mode: host
+    environment:
+      - ROOT_ADDR=${ROOT_ADDR}
     depends_on:
       - influxdb
     restart: unless-stopped
