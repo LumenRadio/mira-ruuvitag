@@ -167,8 +167,7 @@ class DBReporter:
 
 
 # Main
-
-db = DBReporter('localhost', 8086, 'mirauser', 'mypassword', 'miradb', root_addr)
+db = DBReporter('localhost', 8086, 'mirauser', 'mirapassword', 'miradb', root_addr)
 
 for tagdata, host, port in udp_server():
     db.upload(tagdata, host)

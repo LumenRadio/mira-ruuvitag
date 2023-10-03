@@ -1,38 +1,96 @@
 MiraOS for RuuviTag
 ===================
+This repo provides a guide for setting up a sensor network using Mira products and RuuviTags. Sensor data is stored in InfluxDB and displayed via a Grafana dashboard.
 
-An example of running the MiraOS on RuuviTag hardware, to show how commissioning
-and status can be made using NFC
+# Overview
+RuuviTags form a Mira mesh network, transmitting sensor data to a border gateway. The gateway is a Raspberry Pi equipped with a MiraUSB, which serves as the network's root and acts as a Radio on a Stick (RoaS). The mira-gateway systemd service manages communication with the MiraUSB and directs traffic into the host's network stack. On the host, three containerized services operate:
 
-Build and installation
-----------------------
+1. InfluxDB: A database for sensor data storage.
+2. udp-to-influx: Processes packets from the Mira gateway and saves the sensor data to InfluxDB.
+3. Grafana: Retrieves and visually represents data in a dashboard.
+
+# Quick start
+
+The following components are needed.
+
+1. libmira
+2. MiraUSB
+3. Raspberry Pi 3 or 4 with a SD card and a power supply
+4. A couple of Ruuvi tags
+5. Mira licenses for the Ruuvi tags
+
+To get any of the Mira products, please get in contact with sales@lumenradio.com.
+## Setup raspbian
+1. Follow the instructions on https://www.raspberrypi.com/software/ to create a new installation of Raspebrry Pi OS.
+2. Connect your raspberry Pi to the internet. 
+3. Create a sudo user and log in. 
+
+## Install docker
+```
+curl -sSL https://get.docker.com | sh
+sudo usermod -aG docker <username>
+```
+
+## Set up influxdb, grafana and udp-to-influx services
+On the Raspberry Pi
+```
+cd ~
+git clone https://github.com/LumenRadio/mira-ruuvitag.git
+cd mira-ruuvitag/RPi
+docker compose up -d
+```
+
+When running this the first time a influx database will be created where the sensor data will be stored.
+After some time, you should be able to access grafana at <raspberry_pi_ip>:3000 in your browser.
+
+## Install Mira gateway
+Download the latest Mira gateway .deb package installer. It can be found on https://dl.lumenradio.com/mira/. Contact sales@lumenradio.com for more information.
+
+Follow (steps regarding setting up the Raspberry Pi can be ignored)
+https://docs.lumenrad.io/miraos/2.8.1/description/gateway.html#quick-start-guide-for-mirausb-module
+
+## Setting up RuuviTags
 
 Get the tools required for nRF targets according to:
 https://docs.lumenrad.io/miraos/2.8.0/description/toolchain/tools.html
 
 The software is built to work with MiraOS version 2.2.2 or later.
 
-Download and unpack mira to `src/vendor/libmira`. To get access to libmira contact sales@lumenradio.com.
+Download and unpack mira to `[src vendor libmira](src/vendor/libmira)`. To get access to libmira contact sales@lumenradio.com.
 
 Download and unpack nrf5-sdk, and place in `src/vendor/nrf5-sdk`. nrf5-sdk can be
 [downloaded from Nordic Semiconductor](https://www.nordicsemi.com/Products/Development-software/nrf5-sdk).
-Current supported version is 17.1.0. Note, the
+As of libmira 2.8.0, the supported version is 17.1.0. Note, the
 original directory has a name similar to `nRF5_SDK_17.1.0_ddde560` and has to be
 renamed.
 
+## Bulid
+Stand in the top level directory and run
 ```
 make
 ```
+## Flash
 
-Commissioning
-------------
+First, add a license to the device on address 0x7F000 of length 0x1000, according to MiraOS documentation:
 
-To commission the device, Use a phone and an NFC tag reader/writer app to write
+https://docs.lumenrad.io/miraos/2.8.0/description/licensing/licensing_tool.html#signing-a-device-with-remotely-generated-license
+
+...or by flashing the license as a hex file if available.
+
+Second, flash the application to the device:
+
+```
+nrfjprog -f nrf52 --program mira-ruuvitag-nrf52832ble-os.hex --sectorerase --verify
+```
+
+## Commission
+
+To commission the devices, Use a phone and an NFC tag reader/writer app to write
 an NDEF file containing following records:
 
 1. Name
    - MIME: application/vnd.lumenradio.name
-   - Payload: Name of the device, string up to 32 characters
+   - Payload: Name of the device, string up to 16 characters. Should be unique for each Ruuvi-tag
 2. Network PAN ID
    - MIME: application/vnd.lumenradio.net_panid
    - Payload: Hex, 8 characters / 4 bytes, MSB first
@@ -47,94 +105,19 @@ an NDEF file containing following records:
    - Payload: 0 to 65534 as an integer value.
 6. Move threshold - Threshold value above which motion should be detected
    - MIME: application/vnd.lumenradio.move_theshold
-   - Payload: 0 to 127 as integer value.
+   - Payload: 0 to 127 as integer value
 
-The current commissioning status can be read via NFC. The same set of records
-is available, except for network key.
+When commisioning several Ruuvi tags, make sure to set a different name in step 1. All other parameters can remain the same.
 
-When commissioned, the current network status is also available.
+The encryption key and Network PAN ID needs to be the same as used by the gateway. For more information about configuring the gateway, see https://docs.lumenrad.io/miraos/2.8.1/description/gateway.html.
 
-
-Flashing
---------------------
-First, add a license to the device on address 0x7F000 of length 0x1000, according to MiraOS documentation:
-
-https://docs.lumenrad.io/miraos/2.8.0/description/licensing/licensing_tool.html#signing-a-connected-device
-
-...or by flashing the license as a hex file if available.
-
-Second, flash the application to the device:
-
-```
-nrfjprog -f nrf52 --program mira-demo-nrf52832ble-os.hex --sectorerase --verify
-```
-
-Decommissioning
---------------
-
-To disable the node, use the same method as commissioning, but write:
-- PAN-ID = ffffffff
-- Encryption key = ffffffffffffffffffffffffffffffff
-- Rate = 255
-- Update interval = 65535
-
-Local monitoring of sensor values
----------------------------------
-
-When the device is commissioned, the sensor values is available via NFC as
-fields in the NDEF records. The values is available as user-readable text
-under the MIME type application/vnd.lumenradio.sensor.\*
-
-Sensor values is updated at an interval specified via update interval
-configuration
-
-Packet format for data
--------------
-
-The sensor sends an UDP packet at port 7338 to the root node of the network
-containing:
-
-- 16 bytes name of device, padded with zeroes. Note that a name with 16 bytes
-  may not have a null-byte termination
-- 40 bytes parent address
-- list of sensor values, 9 bytes each
-  - 1 byte type:
-    - 0 = no type
-    - 1 = Temperature
-    - 2 = Pressure
-    - 3 = Humidity
-    - 4 = Battery
-    - 5 = ETX
-    - 6 = Clock drift
-    - 7 = CO2
-    - 8 = Acc_x
-    - 9 = Acc_y
-    - 10 = Acc_z
-    - 11 = Move count
-    - 12 = seq num
-  - 4 bytes, MSB first, signed, sensor P value
-  - 4 bytes, MSB first, unsigned, sensor Q value
-
-The sensor values is transmitted as a rational value. To get the correct sensor
-value, calculate P/Q.
-
-This method makes it possible for the sensor to provide a proper range and
-resolution for presentation.
-
-With this format 11 sensor values can be added before fragmentation occurs.
-
-Receiving and presenting
------------------------
-
-An example script for receiving sensor updates, and publish to InfluxDB is
-provided as udp\_to\_influx.py
-
-The script is designed to work together with the Mira border gateway
+The current commissioning status can be read via NFC. 
+A commissioned node will report its network status. It should go from "not associated" to "associated" and then finally "joined" indicating that the node has sucessfully joined the network.
 
 Disclaimer
 ----------
 
-Copyright (c) 2018, LumenRadio AB All rights reserved.
+Copyright (c) 2023, LumenRadio AB All rights reserved.
 
 The software is provided as an example of how to integrate MiraOS with a
 RuuviTag. The software is delivered without guarantees, and is not affiliated
