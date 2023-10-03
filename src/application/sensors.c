@@ -63,7 +63,6 @@ static sensor_shtc3_ctx_t sensor_shtc3_ctx;
 #if DPS310_ENABLED
 static sensor_dps310_ctx_t sensor_dps310_ctx;
 #endif
-static seq_no_ctx_t seq_no_ctx;
 
 /*
  * List of handlers
@@ -93,7 +92,6 @@ static const sensor_value_t *sensor_values[] = {
     &sensor_lis2dh12_ctx.val_z,
     &sensor_lis2dh12_ctx.val_move_count,
 #endif
-    &seq_no_ctx.seq_no,
     NULL
 };
 
@@ -177,12 +175,6 @@ PROCESS_THREAD(
     /* Enable NFC first when sensors are started */
     nfcif_register_handler(&sensors_nfc_handler);
     sensors_sender_init(&sender_ctx);
-
-    /* Setup sequence numbers for the HBs */
-    memset(&seq_no_ctx, 0, sizeof(seq_no_ctx_t));
-    seq_no_ctx.seq_no.type = SENSOR_VALUE_TYPE_SEQ_NO;
-    seq_no_ctx.seq_no.value_p = 1; // value_p modified only in case of sending HB
-    seq_no_ctx.seq_no.value_q = 1;
 
     /*
      * Start polling

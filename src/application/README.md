@@ -4,7 +4,7 @@
    - Payload: Name of the device, string up to 16 characters
 2. Network PAN ID
    - MIME: application/vnd.lumenradio.net_panid
-   - Payload: Hex, 8 characters / 4 bytes, MSB first: 13243546
+   - Payload: Hex, 8 characters / 4 bytes, MSB first 
 3. Network encryption key
    - MIME: application/vnd.lumenradio.net_key
    - Payload: Hex string, 32 characters
@@ -43,6 +43,7 @@ containing:
 - 16 bytes name of device, padded with zeroes. Note that a name with 16 bytes
   may not have a null-byte termination
 - 40 bytes parent address
+- 4 byte sequence number, MSB first
 - list of sensor values, 9 bytes each
   - 1 byte type:
     - 0 = no type
@@ -64,4 +65,4 @@ value, calculate P/Q.
 This method makes it possible for the sensor to provide a proper range and
 resolution for presentation.
 
-With this format 10 sensor values can be added before fragmentation occurs.
+With this format 11 sensor values can be added before fragmentation occurs.
