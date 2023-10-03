@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
+import os
 import socket
+import ipaddress
 import influxdb
 import datetime
 import math
@@ -23,7 +25,8 @@ class CalculateNbrOfHops:
        # If we have a root address given, use that
         if self.root_address:
             nbr_of_hops = 1
-            while (parent_address != self.root_address):
+            # Expand ipv6 addresses from possibly abbreviated form before comparing
+            while (parse_ipv6_address(parent_address) != parse_ipv6_address(self.root_address)):
                 nbr_of_hops = nbr_of_hops + 1
 
                 parent_address = self.dict_address_parent.get(parent_address)
@@ -64,8 +67,8 @@ class SampleValue:
 
 class TagData:
     def __init__(self, raw):
-        self.name = (raw[0:16]).decode('utf-8')
-        self.parent = (raw[16:56]).decode('utf-8')
+        self.name = raw[0:16].decode('utf-8')
+        self.parent = raw[16:56].rstrip(b'\x00').decode('utf-8')
         self.seq_no = int.from_bytes(raw[56:60], 'big')
         self.sensors = []
         for sensor_start in range(60,len(raw),9):
@@ -185,14 +188,27 @@ class DBReporter:
         now = datetime.datetime.now()
         print("[{}] host: {}, hops: {}, sensor: {}".format( now.strftime("%H:%M:%S"), host, hops, tagdata))
 
-def main():
-    # Main
+def parse_ipv6_address(string):
+    try:
+        expanded_ipv6 = ipaddress.IPv6Address(string).exploded
+    except ValueError:
+        msg = f"{string} is not a valid IPv6 address"
+        raise ValueError(msg)
+    return expanded_ipv6
 
-    db = DBReporter('localhost', 8086, 'mirauser', 'mirapassword', 'miradb')
+def main():
+
+    root_addr = os.environ.get("ROOT_ADDR", None)
+    if root_addr is not None and root_addr != "":
+        root_addr = parse_ipv6_address(root_addr)
+        print(f"Starting udp-to-influx with root address set to {root_addr}")
+    else:
+        print(f"Starting udp-to-influx with no root address set. Falling back on automatic detection of root for hops calculations.")
+
+    db = DBReporter('localhost', 8086, 'mirauser', 'mirapassword', 'miradb', root_addr)
 
     for tagdata, host, port in udp_server():
         db.upload(tagdata, host)
-
 
 if __name__ == "__main__":
     main()
