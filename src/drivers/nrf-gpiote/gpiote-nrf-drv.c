@@ -16,11 +16,11 @@
 
 #include "gpiote-nrf-drv.h"
 
-uint8_t gpiote_edge_event_init(
-    nrfx_gpiote_pin_t te_pin,
-    nrf_gpiote_polarity_t polarity,
-    nrf_gpio_pin_pull_t pull,
-    nrfx_gpiote_evt_handler_t callback)
+uint8_t
+gpiote_edge_event_init(nrfx_gpiote_pin_t te_pin,
+                       nrf_gpiote_polarity_t polarity,
+                       nrf_gpio_pin_pull_t pull,
+                       nrfx_gpiote_evt_handler_t callback)
 {
     uint8_t status = 0;
     nrfx_gpiote_in_config_t te_config;

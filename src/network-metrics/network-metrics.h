@@ -17,10 +17,11 @@
 #ifndef NETWORK_METRICS_H
 #define NETWORK_METRICS_H
 
-#include <mira.h>
 #include "sensor-value.h"
+#include <mira.h>
 
-typedef struct {
+typedef struct
+{
     sensor_value_t etx;
     mira_bool_t sensor_available;
 } network_metrics_ctx_t;

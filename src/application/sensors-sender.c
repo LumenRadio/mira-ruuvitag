@@ -17,16 +17,16 @@
 #include "sensors-sender.h"
 #include "app-config.h"
 #include <mira.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #define SENSOR_PORT 7338
-/* To avoid fragmentation, prevent packet size from being larger than 160 bytes. Therefore, only
- * (160-16-40-4)/9 = 11 sensors values may be sent */
+/* To avoid fragmentation, prevent packet size from being larger than 160 bytes.
+ * Therefore, only (160-16-40-4)/9 = 11 sensors values may be sent */
 #define MAX_SENSOR_VALUES 11
 
-void sensors_sender_init(
-    sensors_sender_context_t *ctx)
+void
+sensors_sender_init(sensors_sender_context_t* ctx)
 {
     /*
      * Connect to have a reference for MIRA. But we don't care about the
@@ -36,7 +36,8 @@ void sensors_sender_init(
     ctx->seq_no = 0;
 }
 
-static int sensors_sender_add_value(uint8_t* buf, const sensor_value_t* value)
+static int
+sensors_sender_add_value(uint8_t* buf, const sensor_value_t* value)
 {
     /*
      * Each sensor value is:
@@ -59,7 +60,8 @@ static int sensors_sender_add_value(uint8_t* buf, const sensor_value_t* value)
     return buf_idx;
 }
 
-static int sensors_sender_add_header(uint8_t* buf, uint32_t seq_no)
+static int
+sensors_sender_add_header(uint8_t* buf, uint32_t seq_no)
 {
     mira_net_address_t parent_address;
     char parent_address_str[MIRA_NET_MAX_ADDRESS_STR_LEN];
@@ -80,8 +82,7 @@ static int sensors_sender_add_header(uint8_t* buf, uint32_t seq_no)
     size_t payload_len = 0;
     memcpy(&buf[payload_len], app_config.name, 16);
     payload_len += 16;
-    memcpy(&buf[payload_len], &parent_address_str,
-        MIRA_NET_MAX_ADDRESS_STR_LEN);
+    memcpy(&buf[payload_len], &parent_address_str, MIRA_NET_MAX_ADDRESS_STR_LEN);
     payload_len += MIRA_NET_MAX_ADDRESS_STR_LEN;
 
     buf[payload_len++] = (seq_no >> 24) & 0xff;
@@ -92,16 +93,14 @@ static int sensors_sender_add_header(uint8_t* buf, uint32_t seq_no)
     return payload_len;
 }
 
-void sensors_sender_send(
-    sensors_sender_context_t *ctx,
-    const sensor_value_t **values,
-    int num_values)
+void
+sensors_sender_send(sensors_sender_context_t* ctx, const sensor_value_t** values, int num_values)
 {
     mira_net_address_t root_address;
     char parent_address_str[MIRA_NET_MAX_ADDRESS_STR_LEN];
     memset(parent_address_str, 0, MIRA_NET_MAX_ADDRESS_STR_LEN);
     if (mira_net_get_root_address(&root_address) != MIRA_SUCCESS) {
-        printf("No root address: %d\n", mira_net_get_state() );
+        printf("No root address: %d\n", mira_net_get_state());
         return;
     }
 
@@ -123,11 +122,6 @@ void sensors_sender_send(
         nrof_added_values += 1;
     }
 
-    mira_net_udp_send_to(
-        ctx->conn,
-        &root_address,
-        SENSOR_PORT,
-        payload,
-        payload_len);
+    mira_net_udp_send_to(ctx->conn, &root_address, SENSOR_PORT, payload, payload_len);
     ctx->seq_no++;
 }

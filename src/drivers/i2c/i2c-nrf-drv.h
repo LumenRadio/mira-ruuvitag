@@ -11,31 +11,25 @@ form without prior written permission from LumenRadio AB.
 #undef MAX
 #include "nrf_drv_twi.h"
 
-typedef struct {
+typedef struct
+{
     uint32_t sda;
     uint32_t scl;
 } i2c_config_t;
 
-int i2c_init(
-    i2c_config_t *config);
+int i2c_init(i2c_config_t* config);
 
-bool i2c_is_init(
-    void);
+bool i2c_is_init(void);
 
-int nrf_i2c_write(
-    uint8_t I2C_slave_address,
-    uint8_t *tx_buff,
-    uint8_t len);
+int nrf_i2c_write(uint8_t I2C_slave_address, uint8_t* tx_buff, uint8_t len);
 
 /* Use this with clock stretching */
-int nrf_i2c_read(
-    uint8_t I2C_slave_address,
-    uint8_t *tx_buff,
-    uint8_t tx_len,
-    volatile uint8_t *rx_buff,
-    uint8_t rx_len);
+int nrf_i2c_read(uint8_t I2C_slave_address,
+                 uint8_t* tx_buff,
+                 uint8_t tx_len,
+                 volatile uint8_t* rx_buff,
+                 uint8_t rx_len);
 
-int nrf_i2c_xfer_is_done(
-    void);
+int nrf_i2c_xfer_is_done(void);
 
 #endif

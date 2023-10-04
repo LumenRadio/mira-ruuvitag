@@ -7,10 +7,22 @@ import influxdb
 import datetime
 import math
 
-_units = ['none', 'deg C', 'Pa', '%', 'V', '', 'mg', 'mg', 'mg', '']
-_types = ['none', 'temperature', 'pressure', 'humidity', 'battery', 'etx', 'acc_x', 'acc_y', 'acc_z', 'move_count']
+_units = ["none", "deg C", "Pa", "%", "V", "", "mg", "mg", "mg", ""]
+_types = [
+    "none",
+    "temperature",
+    "pressure",
+    "humidity",
+    "battery",
+    "etx",
+    "acc_x",
+    "acc_y",
+    "acc_z",
+    "move_count",
+]
 pdr_dict = {}
 # Calculate number of hops towards root.
+
 
 class CalculateNbrOfHops:
     def __init__(self, root):
@@ -22,81 +34,90 @@ class CalculateNbrOfHops:
         self.dict_address_parent[host] = parent_address
         # Will add if the host if not present, otherwise update
 
-       # If we have a root address given, use that
+        # If we have a root address given, use that
         if self.root_address:
             nbr_of_hops = 1
             # Expand ipv6 addresses from possibly abbreviated form before comparing
-            while (parse_ipv6_address(parent_address) != parse_ipv6_address(self.root_address)):
+            while parse_ipv6_address(parent_address) != parse_ipv6_address(
+                self.root_address
+            ):
                 nbr_of_hops = nbr_of_hops + 1
 
                 parent_address = self.dict_address_parent.get(parent_address)
-                if (parent_address == None or nbr_of_hops > 30):
+                if parent_address == None or nbr_of_hops > 30:
                     # Safety if stuck in loop or parent is not present
                     return -1
             return nbr_of_hops
         # If no root address given, just follow the parents up until we hit None. Most likely this is root
         else:
             nbr_of_hops = 0
-            while(parent_address != None):
+            while parent_address != None:
                 nbr_of_hops += 1
                 parent_address = self.dict_address_parent.get(parent_address)
-                if (nbr_of_hops > 30):
+                if nbr_of_hops > 30:
                     # Safe if stuck in loop
                     return -1
 
             return nbr_of_hops
 
+
 # Value processing
 
-class SampleValue:
 
+class SampleValue:
     def __init__(self, raw):
         self.type = raw[0]
-        value_p = int.from_bytes(raw[1:5], 'big', signed=True)
-        value_q = int.from_bytes(raw[5:9], 'big', signed=False)
+        value_p = int.from_bytes(raw[1:5], "big", signed=True)
+        value_q = int.from_bytes(raw[5:9], "big", signed=False)
         if value_q != 0:
             self.value = float(value_p) / value_q
         else:
             self.value = float(value_p)
 
     def __str__(self):
-        if (self.type < len(_types)):
+        if self.type < len(_types):
             return f"{_types[self.type]} = {self.value} {_units[self.type]}"
         else:
             return ""
 
+
 class TagData:
     def __init__(self, raw):
-        self.name = raw[0:16].decode('utf-8')
-        self.parent = raw[16:56].rstrip(b'\x00').decode('utf-8')
-        self.seq_no = int.from_bytes(raw[56:60], 'big')
+        self.name = raw[0:16].decode("utf-8")
+        self.parent = raw[16:56].rstrip(b"\x00").decode("utf-8")
+        self.seq_no = int.from_bytes(raw[56:60], "big")
         self.sensors = []
-        for sensor_start in range(60,len(raw),9):
-            self.sensors.append(SampleValue(raw[sensor_start:sensor_start+9]))
+        for sensor_start in range(60, len(raw), 9):
+            self.sensors.append(SampleValue(raw[sensor_start : sensor_start + 9]))
 
     def __str__(self):
         sensor_str = " ".join([str(sensor) for sensor in self.sensors])
-        return f"{self.name}: parent = {self.parent} seq_no = {self.seq_no} {sensor_str}"
+        return (
+            f"{self.name}: parent = {self.parent} seq_no = {self.seq_no} {sensor_str}"
+        )
+
 
 # Packet receiver
 
-def udp_server(host='::', port=7338):
+
+def udp_server(host="::", port=7338):
     s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     s.bind((host, port))
     while True:
-        (data, (host, port, flowinfo, scopeid)) = s.recvfrom(128*1024)
+        (data, (host, port, flowinfo, scopeid)) = s.recvfrom(128 * 1024)
         yield (TagData(bytearray(data)), host, port)
+
 
 def calculate_pdr(host, seq_no):
     global pdr_dict
 
-    #Calculate the PDR
+    # Calculate the PDR
     if host in pdr_dict.keys():
         if seq_no == 0:
             pdr_dict[host] = 0
-        else :
+        else:
             pdr_dict[host] = pdr_dict[host] + 1
     else:
         if seq_no > 0:
@@ -106,87 +127,101 @@ def calculate_pdr(host, seq_no):
 
     if seq_no == 0:
         pdr = 1.0
-    else :
+    else:
         pdr = float(pdr_dict[host]) / seq_no
 
     if pdr > 1:
         pdr_dict[host] = seq_no
         pdr = 1.0
 
-    #print ("PDR: "+ pdr + "\n")
+    # print ("PDR: "+ pdr + "\n")
     return pdr * 100
+
 
 # InfluxDB reporter
 
-class DBReporter:
 
+class DBReporter:
     def __init__(self, host, port, user, password, dbname, root):
         self.client = influxdb.InfluxDBClient(host, port, user, password, dbname)
         self.calc_hops = CalculateNbrOfHops(root)
 
     def upload(self, tagdata, host):
         hops = self.calc_hops.calc_hops(host, tagdata.parent)
-        now = datetime.datetime.utcnow().isoformat() + 'Z'
+        now = datetime.datetime.utcnow().isoformat() + "Z"
         body = []
         acc_avg = 0
 
         for sensor in tagdata.sensors:
-	    #print("DEBUG: TYPE:", sensor.type)
-            if (sensor.type < len(_types)):
-                if _types[sensor.type] == 'etx':
+            # print("DEBUG: TYPE:", sensor.type)
+            if sensor.type < len(_types):
+                if _types[sensor.type] == "etx":
                     fields = {
                         "etx": sensor.value,
                         "neigbour": tagdata.parent,
-                        "hops": hops
-                   }
+                        "hops": hops,
+                    }
                 else:
                     fields = {
                         "value": sensor.value,
                     }
-                if (_types[sensor.type] == 'acc_x') or (_types[sensor.type] == 'acc_y') or (_types[sensor.type] == 'acc_z'):
+                if (
+                    (_types[sensor.type] == "acc_x")
+                    or (_types[sensor.type] == "acc_y")
+                    or (_types[sensor.type] == "acc_z")
+                ):
                     acc_avg += sensor.value * sensor.value
-                body.append({
-                    "measurement": _types[sensor.type],
-                    "tags": {
-                        "sensor": tagdata.name,
-                        "address": host,
-                    },
-                    "time": now,
-                    "fields": fields
-                })
+                body.append(
+                    {
+                        "measurement": _types[sensor.type],
+                        "tags": {
+                            "sensor": tagdata.name,
+                            "address": host,
+                        },
+                        "time": now,
+                        "fields": fields,
+                    }
+                )
             else:
                 print("IndexError: skipping this value")
 
         # Add pdr
         pdr = calculate_pdr(host, tagdata.seq_no)
-        body.append({
-            "measurement": 'seq_no',
-            "tags": {
-                "sensor": tagdata.name,
-                "address": host,
-            },
-            "time": now,
-            "fields": {
-                "pdr": pdr,
-             }
-        })
+        body.append(
+            {
+                "measurement": "seq_no",
+                "tags": {
+                    "sensor": tagdata.name,
+                    "address": host,
+                },
+                "time": now,
+                "fields": {
+                    "pdr": pdr,
+                },
+            }
+        )
 
         # Add acc_rms
         acc_rms = math.sqrt(acc_avg)
-        body.append({
-            "measurement": 'acc_rms',
-            "tags": {
-                "sensor": tagdata.name,
-                "address": host,
-            },
-            "time": now,
-            "fields": {
-                "value": acc_rms
+        body.append(
+            {
+                "measurement": "acc_rms",
+                "tags": {
+                    "sensor": tagdata.name,
+                    "address": host,
+                },
+                "time": now,
+                "fields": {"value": acc_rms},
             }
-        })
+        )
         self.client.write_points(body)
         now = datetime.datetime.now()
-        print("[{}] host: {}, hops: {}, sensor: {}".format( now.strftime("%H:%M:%S"), host, hops, tagdata))
+        print(
+            "[{}] host: {}, hops: {}, sensor: {}".format(
+                now.strftime("%H:%M:%S"), host, hops, tagdata
+            )
+        )
+
 
 def parse_ipv6_address(string):
     try:
@@ -196,20 +231,22 @@ def parse_ipv6_address(string):
         raise ValueError(msg)
     return expanded_ipv6
 
-def main():
 
+def main():
     root_addr = os.environ.get("ROOT_ADDR", None)
     if root_addr is not None and root_addr != "":
         root_addr = parse_ipv6_address(root_addr)
         print(f"Starting udp-to-influx with root address set to {root_addr}")
     else:
-        print(f"Starting udp-to-influx with no root address set. Falling back on automatic detection of root for hops calculations.")
+        print(
+            f"Starting udp-to-influx with no root address set. Falling back on automatic detection of root for hops calculations."
+        )
 
-    db = DBReporter('localhost', 8086, 'mirauser', 'mirapassword', 'miradb', root_addr)
+    db = DBReporter("localhost", 8086, "mirauser", "mirapassword", "miradb", root_addr)
 
     for tagdata, host, port in udp_server():
         db.upload(tagdata, host)
 
+
 if __name__ == "__main__":
     main()
-

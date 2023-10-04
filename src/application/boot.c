@@ -24,8 +24,8 @@
 
 PROCESS(boot_proc, "Boot process");
 
-void mira_setup(
-    void)
+void
+mira_setup(void)
 {
     board_setup();
 

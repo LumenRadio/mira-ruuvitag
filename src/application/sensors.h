@@ -26,8 +26,7 @@
  *
  * It should also provide configuration and feedback via NFC
  */
-void sensors_init(
-    void);
+void sensors_init(void);
 
 PROCESS_NAME(sensors_proc);
 

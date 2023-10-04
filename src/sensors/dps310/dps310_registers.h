@@ -20,35 +20,35 @@
 #define _DPS310REG_H_
 
 /* Register addresses */
-#define DPS310_REVISION_ID_REG            (0x0D)
-#define DPS310_ID                         (0x10)
-#define PRS_B2                            (0x00)
-#define PRS_B1                            (0x01)
-#define PRS_B0                            (0x02)
-#define TMP_B2                            (0x03)
-#define TMP_B1                            (0x04)
-#define TMP_B0                            (0x05)
-#define PRS_CFG                           (0x06)
-#define TMP_CFG                           (0x07)
-#define MEAS_CFG                          (0x08)
-#define COEF_SRCE                         (0x28)
-#define CAL_C0                            (0x10)
+#define DPS310_REVISION_ID_REG (0x0D)
+#define DPS310_ID (0x10)
+#define PRS_B2 (0x00)
+#define PRS_B1 (0x01)
+#define PRS_B0 (0x02)
+#define TMP_B2 (0x03)
+#define TMP_B1 (0x04)
+#define TMP_B0 (0x05)
+#define PRS_CFG (0x06)
+#define TMP_CFG (0x07)
+#define MEAS_CFG (0x08)
+#define COEF_SRCE (0x28)
+#define CAL_C0 (0x10)
 
 /* Operating mode commands */
-#define IDLE                              (0x00)
-#define CMD_PRS                           (0x01) // read pressure
-#define CMD_TMP                           (0x02) // read temperature
+#define IDLE (0x00)
+#define CMD_PRS (0x01) // read pressure
+#define CMD_TMP (0x02) // read temperature
 
 /* Measurement rates and oversampling rates*/
-#define PM_RATE_8                         (0x30)
-#define PM_PRC_8                          (0x03)
+#define PM_RATE_8 (0x30)
+#define PM_PRC_8 (0x03)
 
-#define TMP_RATE_8                        (0x30)
-#define TMP_PRC_8                         (0x03)
-#define TMP_EXT                           1 << 7
+#define TMP_RATE_8 (0x30)
+#define TMP_PRC_8 (0x03)
+#define TMP_EXT 1 << 7
 
 /* SPI commands */
-#define DPS310_READ                          (0x80)
-#define DPS310_WRITE                         (0x00)
+#define DPS310_READ (0x80)
+#define DPS310_WRITE (0x00)
 
 #endif

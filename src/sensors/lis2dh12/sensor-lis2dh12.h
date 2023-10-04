@@ -17,30 +17,34 @@
 #ifndef SENSOR_LIS2DH12_H
 #define SENSOR_LIS2DH12_H
 
-#include <mira.h>
-#include <stdint.h>
 #include "lis2dh12_registers.h"
 #include "sensor-value.h"
+#include <mira.h>
+#include <stdint.h>
 
 /* Use the nRF SDK for the interrupt handler */
 #undef MIN
 #undef MAX
 
-/* TYPES ******************************************************************************************/
+/* TYPES
+ * ******************************************************************************************/
 /** Structure containing sensor data for all 3 axis */
-typedef struct __attribute__((packed)){
+typedef struct __attribute__((packed))
+{
     int16_t x;
     int16_t y;
     int16_t z;
 } acceleration_t;
 
 /** Union to split raw data to values for each axis */
-typedef union {
+typedef union
+{
     uint8_t raw[sizeof(acceleration_t)];
     acceleration_t sensor;
 } lis2dh12_sensor_buffer_t;
 
-typedef struct {
+typedef struct
+{
     sensor_value_t val_x;
     sensor_value_t val_y;
     sensor_value_t val_z;
@@ -49,33 +53,35 @@ typedef struct {
 } sensor_lis2dh12_ctx_t;
 
 /* Available scales */
-typedef enum {
-    LIS2DH12_SCALE2G = LIS2DH12_FS_2G, /**< Scale Selection: +/- 2g */
+typedef enum
+{
+    LIS2DH12_SCALE2G = LIS2DH12_FS_2G,  /**< Scale Selection: +/- 2g */
     LIS2DH12_SCALE4G = LIS2DH12_FS_4G,  /**< Scale Selection: +/- 4g */
     LIS2DH12_SCALE8G = LIS2DH12_FS_8G,  /**< Scale Selection: +/- 8g */
     LIS2DH12_SCALE16G = LIS2DH12_FS_16G /**< Scale Selection: +/- 16g */
 } lis2dh12_scale_t;
 
 /** Available sample rates */
-typedef enum {
-    LIS2DH12_RATE_0   = 0,              /**< Power down */
-    LIS2DH12_RATE_1   = 1 << 4, /**< 1 Hz */
-    LIS2DH12_RATE_10  = 2 << 4, /**< 10 Hz*/
-    LIS2DH12_RATE_25  = 3 << 4,
-    LIS2DH12_RATE_50  = 4 << 4,
+typedef enum
+{
+    LIS2DH12_RATE_0 = 0,       /**< Power down */
+    LIS2DH12_RATE_1 = 1 << 4,  /**< 1 Hz */
+    LIS2DH12_RATE_10 = 2 << 4, /**< 10 Hz*/
+    LIS2DH12_RATE_25 = 3 << 4,
+    LIS2DH12_RATE_50 = 4 << 4,
     LIS2DH12_RATE_100 = 5 << 4,
     LIS2DH12_RATE_200 = 6 << 4,
     LIS2DH12_RATE_400 = 7 << 4 /** 1k+ rates not implemented */
 } lis2dh12_sample_rate_t;
 
-typedef enum {
-    LIS2DH12_RES8BIT = 8,       /**< 8 extra bits */
-    LIS2DH12_RES10BIT = 6,              /**< 6 extra bits */
-    LIS2DH12_RES12BIT = 4       /**< 4 extra bits */
+typedef enum
+{
+    LIS2DH12_RES8BIT = 8,  /**< 8 extra bits */
+    LIS2DH12_RES10BIT = 6, /**< 6 extra bits */
+    LIS2DH12_RES12BIT = 4  /**< 4 extra bits */
 } lis2dh12_resolution_t;
 
-void sensor_lis2dh12_reinit_sensor(
-    void);
+void sensor_lis2dh12_reinit_sensor(void);
 /*
     Init LIS2DH12 sensor
     */

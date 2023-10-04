@@ -14,10 +14,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "nfc-if.h"
 #include <mira.h>
 #include <stdio.h>
 #include <string.h>
-#include "nfc-if.h"
 
 // #include "../../../firmwares/application/buildinfo.h"
 
@@ -26,8 +26,8 @@ static int nfc_n_handlers;
 
 static uint8_t nfc_file_buffer[1024];
 
-static void nfc_field_on(
-    void *storage)
+static void
+nfc_field_on(void* storage)
 {
     int i;
     printf("Field on\n");
@@ -39,8 +39,8 @@ static void nfc_field_on(
     }
 }
 
-static void nfc_field_off(
-    void *storage)
+static void
+nfc_field_off(void* storage)
 {
     int i;
     printf("Field off\n");
@@ -52,44 +52,48 @@ static void nfc_field_off(
     }
 }
 
-static uint8_t *nfc_file_open(
-    mira_nfc_file_id_t file_id,
-    mira_size_t *size,
-    void *storage)
+static uint8_t*
+nfc_file_open(mira_nfc_file_id_t file_id, mira_size_t* size, void* storage)
 {
     int i;
     mira_nfc_ndef_writer_t writer;
 
-    const char *version_string = mira_get_version();
+    const char* version_string = mira_get_version();
 
     if (file_id == MIRA_NFC_NDEF_FILE_ID) {
         printf("NDEF file open\n");
 
-        mira_nfc_ndef_write_start(
-            &writer,
-            nfc_file_buffer,
-            sizeof(nfc_file_buffer));
+        mira_nfc_ndef_write_start(&writer, nfc_file_buffer, sizeof(nfc_file_buffer));
 
         /* First field should be of identifiable header */
-        mira_nfc_ndef_write_copy(&writer, MIRA_NFC_NDEF_TNF_MIME_TYPE,
-            (const uint8_t *) "application/vnd.lumenradio.miraversion", 38,
-            NULL, 0,
-            (uint8_t *) version_string, strlen(version_string)
-        );
+        mira_nfc_ndef_write_copy(&writer,
+                                 MIRA_NFC_NDEF_TNF_MIME_TYPE,
+                                 (const uint8_t*)"application/vnd.lumenradio.miraversion",
+                                 38,
+                                 NULL,
+                                 0,
+                                 (uint8_t*)version_string,
+                                 strlen(version_string));
 
         /* First field should be of identifiable header */
-        mira_nfc_ndef_write_copy(&writer, MIRA_NFC_NDEF_TNF_MIME_TYPE,
-            (const uint8_t *) "application/vnd.lumenradio.apptarget", 36,
-            NULL, 0,
-            (uint8_t *) APPLICATION_TARGET, strlen(APPLICATION_TARGET)
-        );
+        mira_nfc_ndef_write_copy(&writer,
+                                 MIRA_NFC_NDEF_TNF_MIME_TYPE,
+                                 (const uint8_t*)"application/vnd.lumenradio.apptarget",
+                                 36,
+                                 NULL,
+                                 0,
+                                 (uint8_t*)APPLICATION_TARGET,
+                                 strlen(APPLICATION_TARGET));
 
         /* First field should be of identifiable header */
-        mira_nfc_ndef_write_copy(&writer, MIRA_NFC_NDEF_TNF_MIME_TYPE,
-            (const uint8_t *) "application/vnd.lumenradio.appversion", 37,
-            NULL, 0,
-            (uint8_t *) APPLICATION_VERSION, strlen(APPLICATION_VERSION)
-        );
+        mira_nfc_ndef_write_copy(&writer,
+                                 MIRA_NFC_NDEF_TNF_MIME_TYPE,
+                                 (const uint8_t*)"application/vnd.lumenradio.appversion",
+                                 37,
+                                 NULL,
+                                 0,
+                                 (uint8_t*)APPLICATION_VERSION,
+                                 strlen(APPLICATION_VERSION));
 
         /* Add fields by handlers */
         for (i = 0; i < nfc_n_handlers; i++) {
@@ -106,10 +110,8 @@ static uint8_t *nfc_file_open(
     return NULL;
 }
 
-static mira_bool_t nfc_file_save(
-    mira_nfc_file_id_t file_id,
-    mira_size_t size,
-    void *storage)
+static mira_bool_t
+nfc_file_save(mira_nfc_file_id_t file_id, mira_size_t size, void* storage)
 {
     int i;
     if (file_id == MIRA_NFC_NDEF_FILE_ID) {
@@ -128,25 +130,23 @@ static mira_bool_t nfc_file_save(
     return MIRA_FALSE;
 }
 
-static mira_nfc_config_t nfc_conf = {
-    .callback_field_on = nfc_field_on,
-    .callback_field_off = nfc_field_off,
-    .callback_file_open = nfc_file_open,
-    .callback_file_save = nfc_file_save,
-    .storage = NULL,
-    .max_file_size = sizeof(nfc_file_buffer),
-    .proprietary_file_count = 0
-};
+static mira_nfc_config_t nfc_conf = { .callback_field_on = nfc_field_on,
+                                      .callback_field_off = nfc_field_off,
+                                      .callback_file_open = nfc_file_open,
+                                      .callback_file_save = nfc_file_save,
+                                      .storage = NULL,
+                                      .max_file_size = sizeof(nfc_file_buffer),
+                                      .proprietary_file_count = 0 };
 
-void nfcif_init(
-    void)
+void
+nfcif_init(void)
 {
     nfc_n_handlers = 0;
     mira_nfc_init(&nfc_conf);
 }
 
-int nfcif_register_handler(
-    const nfcif_handler_t *handler)
+int
+nfcif_register_handler(const nfcif_handler_t* handler)
 {
     nfc_handlers[nfc_n_handlers] = *handler;
     nfc_n_handlers++;

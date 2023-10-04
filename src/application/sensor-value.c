@@ -16,28 +16,18 @@
 
 #include "sensor-value.h"
 
-const char *sensor_value_unit_name[] = {
-    [SENSOR_VALUE_TYPE_NONE] = "none",
-    [SENSOR_VALUE_TYPE_TEMPERATURE] = "deg C",
-    [SENSOR_VALUE_TYPE_PRESSURE] = "Pa",
-    [SENSOR_VALUE_TYPE_HUMIDITY] = "%",
-    [SENSOR_VALUE_TYPE_BATTERY] = "V",
-    [SENSOR_VALUE_TYPE_ETX] = "",
-    [SENSOR_VALUE_TYPE_ACC_X] = "mg",
-    [SENSOR_VALUE_TYPE_ACC_Y] = "mg",
-    [SENSOR_VALUE_TYPE_ACC_Z] = "mg",
-    [SENSOR_VALUE_TYPE_MOVE_COUNT] = "",
+const char* sensor_value_unit_name[] = {
+    [SENSOR_VALUE_TYPE_NONE] = "none",   [SENSOR_VALUE_TYPE_TEMPERATURE] = "deg C",
+    [SENSOR_VALUE_TYPE_PRESSURE] = "Pa", [SENSOR_VALUE_TYPE_HUMIDITY] = "%",
+    [SENSOR_VALUE_TYPE_BATTERY] = "V",   [SENSOR_VALUE_TYPE_ETX] = "",
+    [SENSOR_VALUE_TYPE_ACC_X] = "mg",    [SENSOR_VALUE_TYPE_ACC_Y] = "mg",
+    [SENSOR_VALUE_TYPE_ACC_Z] = "mg",    [SENSOR_VALUE_TYPE_MOVE_COUNT] = "",
 };
 
-const char *sensor_value_type_name[] = {
-    [SENSOR_VALUE_TYPE_NONE] = "none",
-    [SENSOR_VALUE_TYPE_TEMPERATURE] = "temperature",
-    [SENSOR_VALUE_TYPE_PRESSURE] = "pressure",
-    [SENSOR_VALUE_TYPE_HUMIDITY] = "humidity",
-    [SENSOR_VALUE_TYPE_BATTERY] = "battery",
-    [SENSOR_VALUE_TYPE_ETX] = "etx",
-    [SENSOR_VALUE_TYPE_ACC_X] = "acc_x",
-    [SENSOR_VALUE_TYPE_ACC_Y] = "acc_y",
-    [SENSOR_VALUE_TYPE_ACC_Z] = "acc_z",
-    [SENSOR_VALUE_TYPE_MOVE_COUNT] = "move_count",
+const char* sensor_value_type_name[] = {
+    [SENSOR_VALUE_TYPE_NONE] = "none",         [SENSOR_VALUE_TYPE_TEMPERATURE] = "temperature",
+    [SENSOR_VALUE_TYPE_PRESSURE] = "pressure", [SENSOR_VALUE_TYPE_HUMIDITY] = "humidity",
+    [SENSOR_VALUE_TYPE_BATTERY] = "battery",   [SENSOR_VALUE_TYPE_ETX] = "etx",
+    [SENSOR_VALUE_TYPE_ACC_X] = "acc_x",       [SENSOR_VALUE_TYPE_ACC_Y] = "acc_y",
+    [SENSOR_VALUE_TYPE_ACC_Z] = "acc_z",       [SENSOR_VALUE_TYPE_MOVE_COUNT] = "move_count",
 };

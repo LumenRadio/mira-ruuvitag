@@ -17,10 +17,11 @@
 #ifndef APP_CONFIG_H
 #define APP_CONFIG_H
 
-#include <stdint.h>
 #include <mira.h>
+#include <stdint.h>
 
-typedef struct {
+typedef struct
+{
     char name[32];
 
     uint8_t net_key[16];
@@ -36,9 +37,7 @@ typedef struct {
 
 extern app_config_t app_config;
 
-void app_config_init(
-    void);
-int app_config_is_configured(
-    void);
+void app_config_init(void);
+int app_config_is_configured(void);
 
 #endif

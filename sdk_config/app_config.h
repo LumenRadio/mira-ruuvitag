@@ -5,8 +5,8 @@ form without prior written permission from LumenRadio AB.
 ----------------------------------------------------------------------------*/
 
 /* Utilise the GPIOTE from nRF SDK */
-#define NRFX_GPIOTE_ENABLED                 1
-#define GPIOTE_ENABLED                      1
+#define NRFX_GPIOTE_ENABLED 1
+#define GPIOTE_ENABLED 1
 
 /* Required for TWI */
 #define TWI_ENABLED 1

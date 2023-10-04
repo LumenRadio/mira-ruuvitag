@@ -14,26 +14,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <mira.h>
 #include "board.h"
+#include <mira.h>
 
-#include "spi-if.h"
 #include "nfc-if.h"
+#include "spi-if.h"
 
-MIRA_IODEFS(
-    MIRA_IODEF_NONE,
+MIRA_IODEFS(MIRA_IODEF_NONE,
 #if defined(BOARD_STDOUT_RTT_ID)
-    MIRA_IODEF_RTT(BOARD_STDOUT_RTT_ID),
+            MIRA_IODEF_RTT(BOARD_STDOUT_RTT_ID),
 #elif defined(BOARD_STDOUT_UART_ID)
-    MIRA_IODEF_UART(BOARD_STDOUT_UART_ID),
+            MIRA_IODEF_UART(BOARD_STDOUT_UART_ID),
 #else
-    MIRA_IODEF_NONE,
+            MIRA_IODEF_NONE,
 #endif
-    MIRA_IODEF_NONE,
-);
+            MIRA_IODEF_NONE, );
 
-void board_setup(
-    void)
+void
+board_setup(void)
 {
     uint32_t i;
 
@@ -43,16 +41,14 @@ void board_setup(
 #endif
 
 #if defined(BOARD_STDOUT_UART_ID)
-    mira_uart_init(BOARD_STDOUT_UART_ID, &(mira_uart_config_t) {
-        .tx_pin = BOARD_UART_PIN_TX,
-        .rx_pin = BOARD_UART_PIN_RX,
-        .baudrate = BOARD_UART_BAUDRATE
-    });
+    mira_uart_init(BOARD_STDOUT_UART_ID,
+                   &(mira_uart_config_t){ .tx_pin = BOARD_UART_PIN_TX,
+                                          .rx_pin = BOARD_UART_PIN_RX,
+                                          .baudrate = BOARD_UART_BAUDRATE });
 #endif
 
-
-    /* Power down sensors and wait 
-     * as they might still be powered from before a reset 
+    /* Power down sensors and wait
+     * as they might still be powered from before a reset
      */
 #ifdef SENSOR_PWR_1
     mira_gpio_set_dir(SENSOR_PWR_1, MIRA_GPIO_DIR_OUT);
@@ -64,7 +60,7 @@ void board_setup(
 #endif
 
     for (i = 0; i < 1000000; i++) {
-        asm volatile ("nop");
+        asm volatile("nop");
     }
 
     /* Power up sensors again */
@@ -105,7 +101,7 @@ void board_setup(
     mira_gpio_set_value(BOARD_LIS2DH12_CS_PIN, MIRA_FALSE);
 
     for (i = 0; i < 1000000; i++) {
-        asm volatile ("nop");
+        asm volatile("nop");
     }
 
     /* Set both CS high, which is idle state */
@@ -116,11 +112,8 @@ void board_setup(
     nfcif_init();
 }
 
-void board_led_set(
-    int num,
-    int val)
+void
+board_led_set(int num, int val)
 {
-    mira_gpio_set_value(
-        num == 1 ? BOARD_LED1_PIN : BOARD_LED2_PIN,
-        val ? MIRA_FALSE : MIRA_TRUE);
+    mira_gpio_set_value(num == 1 ? BOARD_LED1_PIN : BOARD_LED2_PIN, val ? MIRA_FALSE : MIRA_TRUE);
 }

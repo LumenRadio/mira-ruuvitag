@@ -16,12 +16,12 @@
 
 #include "app-config.h"
 
+#include <math.h>
 #include <mira.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <math.h>
 
 #include "board.h"
 #include "nfc-if.h"
@@ -39,22 +39,16 @@ static int acc_config_loaded = 0;
 
 PROCESS(app_config_writer, "Config writer");
 
-static void config_nfc_on_open(
-    mira_nfc_ndef_writer_t *writer);
-static void config_nfc_on_save(
-    uint8_t *file,
-    mira_size_t size);
-static void config_nfc_on_field_off(
-    void);
+static void config_nfc_on_open(mira_nfc_ndef_writer_t* writer);
+static void config_nfc_on_save(uint8_t* file, mira_size_t size);
+static void config_nfc_on_field_off(void);
 
-static const nfcif_handler_t config_nfc_handler = {
-    .on_open = config_nfc_on_open,
-    .on_save = config_nfc_on_save,
-    .on_field_off = config_nfc_on_field_off
-};
+static const nfcif_handler_t config_nfc_handler = { .on_open = config_nfc_on_open,
+                                                    .on_save = config_nfc_on_save,
+                                                    .on_field_off = config_nfc_on_field_off };
 
-static void print_config(
-    void)
+static void
+print_config(void)
 {
     printf("Name: %s\n", app_config.name);
     printf("Pan ID: %8lx\n", app_config.net_panid);
@@ -66,13 +60,13 @@ static void print_config(
     }
     printf("\n");
 #endif
-    printf("Rate: %d\n", (int) app_config.net_rate);
-    printf("Update interval: %d\n", (int) app_config.update_interval);
+    printf("Rate: %d\n", (int)app_config.net_rate);
+    printf("Update interval: %d\n", (int)app_config.update_interval);
     printf("Move_threshold: %02x\n", app_config.move_threshold);
 }
 
-void app_config_init(
-    void)
+void
+app_config_init(void)
 {
     /* Setup nfc */
     if (MIRA_SUCCESS != mira_config_read(&app_config, sizeof(app_config_t))) {
@@ -92,28 +86,25 @@ void app_config_init(
     process_start(&app_config_writer, NULL);
 }
 
-int app_config_is_configured(
-    void)
+int
+app_config_is_configured(void)
 {
     return app_config.net_panid != 0xffffffff && app_config.net_rate != 0xff;
 }
 
-static void config_nfc_on_field_off(
-    void)
+static void
+config_nfc_on_field_off(void)
 {
     lost_field = 1;
     process_poll(&app_config_writer);
 }
 
-static uint8_t *hexstr(
-    const uint8_t *data,
-    int len)
+static uint8_t*
+hexstr(const uint8_t* data, int len)
 {
     static uint8_t buf[128];
-    uint8_t hexmap[16] = {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
-        'e', 'f'
-    };
+    uint8_t hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
+                           '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
     int i;
     for (i = 0; i < len; i++) {
         buf[i * 2 + 0] = hexmap[(data[i] >> 4) & 0x0f];
@@ -122,9 +113,8 @@ static uint8_t *hexstr(
     return buf;
 }
 
-static uint8_t *hexint(
-    uint32_t data,
-    int len)
+static uint8_t*
+hexint(uint32_t data, int len)
 {
     uint8_t buf[4];
     buf[0] = (data >> 24) & 0xff;
@@ -134,14 +124,12 @@ static uint8_t *hexint(
     return hexstr(buf + 4 - len, len);
 }
 
-static int dehexstr(
-    void *tgt,
-    const uint8_t *src,
-    int len)
+static int
+dehexstr(void* tgt, const uint8_t* src, int len)
 {
     int i;
     int nibble;
-    uint8_t *tgt_i = tgt;
+    uint8_t* tgt_i = tgt;
     for (i = 0; i < len; i++) {
 
         tgt_i[i] = 0;
@@ -161,10 +149,8 @@ static int dehexstr(
     }
     return 0;
 }
-static int dehexint(
-    uint32_t *tgt,
-    const uint8_t *src,
-    int len)
+static int
+dehexint(uint32_t* tgt, const uint8_t* src, int len)
 {
     *tgt = 0;
 
@@ -173,17 +159,15 @@ static int dehexint(
     if (dehexstr(buf + 4 - len, src, len)) {
         return -1;
     }
-    *tgt |= ((uint32_t) buf[0]) << 24;
-    *tgt |= ((uint32_t) buf[1]) << 16;
-    *tgt |= ((uint32_t) buf[2]) << 8;
-    *tgt |= ((uint32_t) buf[3]) << 0;
+    *tgt |= ((uint32_t)buf[0]) << 24;
+    *tgt |= ((uint32_t)buf[1]) << 16;
+    *tgt |= ((uint32_t)buf[2]) << 8;
+    *tgt |= ((uint32_t)buf[3]) << 0;
 
     return 0;
 }
-static int destrint(
-    uint32_t *tgt,
-    const uint8_t *src,
-    int len)
+static int
+destrint(uint32_t* tgt, const uint8_t* src, int len)
 {
     *tgt = 0;
     uint8_t i, num;
@@ -193,60 +177,76 @@ static int destrint(
         if (!(num >= 0 && num <= 9)) {
             return -1;
         }
-        tmp += (uint32_t) num * pow(10, (len - 1 - i));
+        tmp += (uint32_t)num * pow(10, (len - 1 - i));
     }
     *tgt = tmp;
     return 0;
 }
 
-void config_nfc_on_open(
-    mira_nfc_ndef_writer_t *writer)
+void
+config_nfc_on_open(mira_nfc_ndef_writer_t* writer)
 {
 
-    mira_nfc_ndef_write_copy(writer, MIRA_NFC_NDEF_TNF_MIME_TYPE,
-        (const uint8_t *) "application/vnd.lumenradio.name", 31,
-        NULL, 0,
-        (uint8_t *) app_config.name, strlen(app_config.name)
-    );
+    mira_nfc_ndef_write_copy(writer,
+                             MIRA_NFC_NDEF_TNF_MIME_TYPE,
+                             (const uint8_t*)"application/vnd.lumenradio.name",
+                             31,
+                             NULL,
+                             0,
+                             (uint8_t*)app_config.name,
+                             strlen(app_config.name));
 #if APP_CONFIG_EXPOSE_KEY
-    mira_nfc_ndef_write_copy(writer, MIRA_NFC_NDEF_TNF_MIME_TYPE,
-        (const uint8_t *) "application/vnd.lumenradio.net_key", 34,
-        NULL, 0,
-        hexstr(app_config.net_key, 16), 32
-    );
+    mira_nfc_ndef_write_copy(writer,
+                             MIRA_NFC_NDEF_TNF_MIME_TYPE,
+                             (const uint8_t*)"application/vnd.lumenradio.net_key",
+                             34,
+                             NULL,
+                             0,
+                             hexstr(app_config.net_key, 16),
+                             32);
 #endif
-    mira_nfc_ndef_write_copy(writer, MIRA_NFC_NDEF_TNF_MIME_TYPE,
-        (const uint8_t *) "application/vnd.lumenradio.net_panid", 36,
-        NULL, 0,
-        hexint(app_config.net_panid, 4), 8
-    );
+    mira_nfc_ndef_write_copy(writer,
+                             MIRA_NFC_NDEF_TNF_MIME_TYPE,
+                             (const uint8_t*)"application/vnd.lumenradio.net_panid",
+                             36,
+                             NULL,
+                             0,
+                             hexint(app_config.net_panid, 4),
+                             8);
     char network_rate[10];
     sprintf(network_rate, "%d", app_config.net_rate);
-    mira_nfc_ndef_write_copy(writer, MIRA_NFC_NDEF_TNF_MIME_TYPE,
-        (const uint8_t *) "application/vnd.lumenradio.net_rate", 35,
-        NULL, 0,
-        (const uint8_t *) network_rate, strlen(network_rate)
-    );
+    mira_nfc_ndef_write_copy(writer,
+                             MIRA_NFC_NDEF_TNF_MIME_TYPE,
+                             (const uint8_t*)"application/vnd.lumenradio.net_rate",
+                             35,
+                             NULL,
+                             0,
+                             (const uint8_t*)network_rate,
+                             strlen(network_rate));
     char update_intvl[10];
     sprintf(update_intvl, "%d", app_config.update_interval);
-    mira_nfc_ndef_write_copy(writer, MIRA_NFC_NDEF_TNF_MIME_TYPE,
-        (const uint8_t *) "application/vnd.lumenradio.update_interval", 42,
-        NULL, 0,
-        (const uint8_t *) update_intvl, strlen(update_intvl)
-    );
+    mira_nfc_ndef_write_copy(writer,
+                             MIRA_NFC_NDEF_TNF_MIME_TYPE,
+                             (const uint8_t*)"application/vnd.lumenradio.update_interval",
+                             42,
+                             NULL,
+                             0,
+                             (const uint8_t*)update_intvl,
+                             strlen(update_intvl));
     char move_thld[10];
     sprintf(move_thld, "%d", app_config.move_threshold);
-    mira_nfc_ndef_write_copy(writer, MIRA_NFC_NDEF_TNF_MIME_TYPE,
-        (const uint8_t *) "application/vnd.lumenradio.move_threshold", 41,
-        NULL, 0,
-        (const uint8_t *) move_thld, strlen(move_thld)
-    );
+    mira_nfc_ndef_write_copy(writer,
+                             MIRA_NFC_NDEF_TNF_MIME_TYPE,
+                             (const uint8_t*)"application/vnd.lumenradio.move_threshold",
+                             41,
+                             NULL,
+                             0,
+                             (const uint8_t*)move_thld,
+                             strlen(move_thld));
 }
 
-static int cmp_str(
-    const char *match,
-    const uint8_t *str,
-    uint32_t len)
+static int
+cmp_str(const char* match, const uint8_t* str, uint32_t len)
 {
     if (strlen(match) != len) {
         return 0;
@@ -254,9 +254,8 @@ static int cmp_str(
     return 0 == memcmp(match, str, len);
 }
 
-static void config_nfc_on_save(
-    uint8_t *file,
-    mira_size_t size)
+static void
+config_nfc_on_save(uint8_t* file, mira_size_t size)
 {
     mira_nfc_ndef_iter_t iter;
     mira_nfc_ndef_record_t rec;
@@ -271,17 +270,13 @@ static void config_nfc_on_save(
     if (size == 0) {
         return;
     }
-    for (mira_nfc_ndef_iter_start(&iter, &rec, file, size);
-         mira_nfc_ndef_iter_valid(&iter);
+    for (mira_nfc_ndef_iter_start(&iter, &rec, file, size); mira_nfc_ndef_iter_valid(&iter);
          mira_nfc_ndef_iter_next(&iter, &rec)) {
         if (rec.type_name_format != MIRA_NFC_NDEF_TNF_MIME_TYPE) {
             continue;
         }
 
-        if (cmp_str(
-            "application/vnd.lumenradio.name",
-            rec.type,
-            rec.type_length)) {
+        if (cmp_str("application/vnd.lumenradio.name", rec.type, rec.type_length)) {
             int len = sizeof(new_config.name) - 1;
             if (len > rec.payload_length) {
                 len = rec.payload_length;
@@ -290,12 +285,8 @@ static void config_nfc_on_save(
             memset(new_config.name, 0, sizeof(new_config.name));
             memcpy(new_config.name, rec.payload, len);
         }
-        if (cmp_str(
-            "application/vnd.lumenradio.net_key",
-            rec.type,
-            rec.type_length)) {
-            if (rec.payload_length != 32
-                || dehexstr(new_config.net_key, rec.payload, 16)) {
+        if (cmp_str("application/vnd.lumenradio.net_key", rec.type, rec.type_length)) {
+            if (rec.payload_length != 32 || dehexstr(new_config.net_key, rec.payload, 16)) {
                 printf("Invalid net_key\n");
                 return;
             }
@@ -305,10 +296,7 @@ static void config_nfc_on_save(
                 do_restart = 1;
             }
         }
-        if (cmp_str(
-            "application/vnd.lumenradio.net_panid",
-            rec.type,
-            rec.type_length)) {
+        if (cmp_str("application/vnd.lumenradio.net_panid", rec.type, rec.type_length)) {
             uint32_t tmp;
             if (rec.payload_length != 8 || dehexint(&tmp, rec.payload, 4)) {
                 printf("Invalid net_panid \n");
@@ -321,13 +309,10 @@ static void config_nfc_on_save(
                 do_restart = 1;
             }
         }
-        if (cmp_str(
-            "application/vnd.lumenradio.net_rate",
-            rec.type,
-            rec.type_length)) {
+        if (cmp_str("application/vnd.lumenradio.net_rate", rec.type, rec.type_length)) {
             uint32_t tmp;
-            if ((rec.payload_length < 1 && rec.payload_length > 2)
-                || destrint(&tmp, rec.payload, rec.payload_length)) {
+            if ((rec.payload_length < 1 && rec.payload_length > 2) ||
+                destrint(&tmp, rec.payload, rec.payload_length)) {
                 printf("Invalid net_rate\n");
                 return;
             }
@@ -341,13 +326,10 @@ static void config_nfc_on_save(
                 do_restart = 1;
             }
         }
-        if (cmp_str(
-            "application/vnd.lumenradio.update_interval",
-            rec.type,
-            rec.type_length)) {
+        if (cmp_str("application/vnd.lumenradio.update_interval", rec.type, rec.type_length)) {
             uint32_t tmp;
-            if ((rec.payload_length < 1 && rec.payload_length > 5)
-                || destrint(&tmp, rec.payload, rec.payload_length)) {
+            if ((rec.payload_length < 1 && rec.payload_length > 5) ||
+                destrint(&tmp, rec.payload, rec.payload_length)) {
                 printf("Invalid update_interval\n");
                 return;
             }
@@ -356,13 +338,10 @@ static void config_nfc_on_save(
             }
             new_config.update_interval = tmp;
         }
-        if (cmp_str(
-            "application/vnd.lumenradio.move_threshold",
-            rec.type,
-            rec.type_length)) {
+        if (cmp_str("application/vnd.lumenradio.move_threshold", rec.type, rec.type_length)) {
             uint32_t tmp;
-            if ((rec.payload_length < 1 && rec.payload_length > 3)
-                || destrint(&tmp, rec.payload, rec.payload_length)) {
+            if ((rec.payload_length < 1 && rec.payload_length > 3) ||
+                destrint(&tmp, rec.payload, rec.payload_length)) {
                 printf("Invalid move threshold\n");
                 return;
             }
@@ -388,10 +367,9 @@ PROCESS_THREAD(app_config_writer, ev, data)
         lost_field = 0;
 
         if (new_config_loaded) {
-            printf(
-                "Writing config, Pan ID: %08lx rate: %02x\n",
-                new_config.net_panid,
-                new_config.net_rate);
+            printf("Writing config, Pan ID: %08lx rate: %02x\n",
+                   new_config.net_panid,
+                   new_config.net_rate);
 
             new_config_loaded = 0;
             status = mira_config_write(&new_config, sizeof(app_config_t));
