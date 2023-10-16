@@ -14,20 +14,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <mira.h>
 #include "sensor-battery.h"
+#include <mira.h>
 
 #include <string.h>
 
 PROCESS(sensor_battery_init, "Sensor: Battery voltage startup");
 PROCESS(sensor_battery_sample, "Sensor: Battery voltage reader");
 
-PROCESS_THREAD(
-    sensor_battery_init,
-    ev,
-    data)
+PROCESS_THREAD(sensor_battery_init, ev, data)
 {
-    static sensor_battery_ctx_t *ctx;
+    static sensor_battery_ctx_t* ctx;
 
     PROCESS_BEGIN();
 
@@ -47,12 +44,9 @@ PROCESS_THREAD(
     PROCESS_END();
 }
 
-PROCESS_THREAD(
-    sensor_battery_sample,
-    ev,
-    data)
+PROCESS_THREAD(sensor_battery_sample, ev, data)
 {
-    static sensor_battery_ctx_t *ctx;
+    static sensor_battery_ctx_t* ctx;
 
     mira_adc_value_t value;
 

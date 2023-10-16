@@ -23,20 +23,14 @@ extern process_event_t spi_release_event;
 
 #define SPI_ID 1
 
-void spi_init(
-    void);
+void spi_init(void);
 
-int spi_request(
-    mira_gpio_pin_t spi_cs);
+int spi_request(mira_gpio_pin_t spi_cs);
 
-void spi_release(
-    mira_gpio_pin_t spi_cs);
+void spi_release(mira_gpio_pin_t spi_cs);
 
-void spi_cs_active_set(
-    mira_gpio_pin_t spi_cs);
+void spi_cs_active_set(mira_gpio_pin_t spi_cs);
 
-void spi_cs_not_active_set(
-    mira_gpio_pin_t spi_cs);
-
+void spi_cs_not_active_set(mira_gpio_pin_t spi_cs);
 
 #endif

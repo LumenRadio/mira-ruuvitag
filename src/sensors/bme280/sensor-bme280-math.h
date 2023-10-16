@@ -19,7 +19,8 @@
 
 #include <stdint.h>
 
-typedef struct {
+typedef struct
+{
     uint16_t dig_T1;
     int16_t dig_T2;
     int16_t dig_T3;
@@ -45,41 +46,33 @@ typedef struct {
 /**
  * Fill calibration struct from calibration registers
  */
-void sensor_bme280_math_populate_calib(
-    sensor_bme280_calib_t *cal,
-    uint8_t *regs88,
-    uint8_t *regse1);
+void sensor_bme280_math_populate_calib(sensor_bme280_calib_t* cal,
+                                       uint8_t* regs88,
+                                       uint8_t* regse1);
 
 /**
  * Calculate temperature
  *
  * Returns the temperature in resolution of 1/5120 deg C
  */
-int32_t sensor_bme280_math_calc_t(
-    sensor_bme280_calib_t *cal,
-    int32_t adc_T);
+int32_t sensor_bme280_math_calc_t(sensor_bme280_calib_t* cal, int32_t adc_T);
 
-// Returns pressure in Pa as unsigned 32 bit integer in Q24.8 format (24 integer bits and 8 fractional bits).
-// Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
+// Returns pressure in Pa as unsigned 32 bit integer in Q24.8 format (24 integer
+// bits and 8 fractional bits). Output value of “24674867” represents
+// 24674867/256 = 96386.2 Pa = 963.862 hPa
 
 /**
  * Calculate pressure
  *
  * Returns the pressure in resolution of 1/256 Pa
  */
-int32_t sensor_bme280_math_calc_p(
-    sensor_bme280_calib_t *cal,
-    int32_t adc_P,
-    int32_t value_T);
+int32_t sensor_bme280_math_calc_p(sensor_bme280_calib_t* cal, int32_t adc_P, int32_t value_T);
 
 /**
  * Calculate humidity
  *
  * Returns the relative humidity in resolution of 1/1024 %RH
  */
-int32_t sensor_bme280_math_calc_h(
-    sensor_bme280_calib_t *cal,
-    int32_t adc_H,
-    int32_t value_T);
+int32_t sensor_bme280_math_calc_h(sensor_bme280_calib_t* cal, int32_t adc_H, int32_t value_T);
 
 #endif

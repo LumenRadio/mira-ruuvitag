@@ -1,8 +1,8 @@
 import unittest
 from udp_to_influx import CalculateNbrOfHops
 
-class TestCalculateNbrOfHops(unittest.TestCase):
 
+class TestCalculateNbrOfHops(unittest.TestCase):
     def test_root_address(self):
         # Testing for scenario with root_address provided
         root = "2001:db8::1"
@@ -45,5 +45,6 @@ class TestCalculateNbrOfHops(unittest.TestCase):
         obj.calc_hops("2001:db8::2", "2001:db8::4")  # Introducing loop
         self.assertEqual(obj.calc_hops("2001:db8::5", "2001:db8::4"), -1)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

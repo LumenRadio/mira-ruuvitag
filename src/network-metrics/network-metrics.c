@@ -15,20 +15,17 @@
  */
 
 #include <mira.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "network-metrics.h"
 
 PROCESS(network_metrics_init, "Network metrics: startup");
 PROCESS(network_metrics_sample, "network_metrics: sample network metrics");
 
-PROCESS_THREAD(
-    network_metrics_init,
-    ev,
-    data)
+PROCESS_THREAD(network_metrics_init, ev, data)
 {
-    static network_metrics_ctx_t *ctx;
+    static network_metrics_ctx_t* ctx;
 
     PROCESS_BEGIN();
 
@@ -47,12 +44,9 @@ PROCESS_THREAD(
     PROCESS_END();
 }
 
-PROCESS_THREAD(
-    network_metrics_sample,
-    ev,
-    data)
+PROCESS_THREAD(network_metrics_sample, ev, data)
 {
-    static network_metrics_ctx_t *ctx;
+    static network_metrics_ctx_t* ctx;
 
     PROCESS_BEGIN();
 

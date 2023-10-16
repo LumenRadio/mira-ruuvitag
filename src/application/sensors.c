@@ -18,28 +18,29 @@
 
 #include "sensor-value.h"
 
+#include "network-metrics.h"
 #include "sensor-battery.h"
 #include "sensor-bme280.h"
-#include "network-metrics.h"
+#include "sensor-dps310.h"
 #include "sensor-lis2dh12.h"
 #include "sensor-shtc3.h"
-#include "sensor-dps310.h"
 
 #include "sensors-sender.h"
 
-#include "nfc-if.h"
 #include "app-config.h"
 #include "board.h"
+#include "nfc-if.h"
 
 #include <stdio.h>
 #include <string.h>
 
-typedef struct {
-    struct process *init_proc;
-    struct process *sample_proc;
-    void *storage;
-    mira_bool_t *sensor_available;
-    process_event_t *init_done_evnt;
+typedef struct
+{
+    struct process* init_proc;
+    struct process* sample_proc;
+    void* storage;
+    mira_bool_t* sensor_available;
+    process_event_t* init_done_evnt;
 } sensor_handler_t;
 
 /*
@@ -67,7 +68,7 @@ static sensor_dps310_ctx_t sensor_dps310_ctx;
 /*
  * List of handlers
  */
-static const sensor_value_t *sensor_values[] = {
+static const sensor_value_t* sensor_values[] = {
 #if BATTERY_ENABLED
     &sensor_battery_ctx.val_battery,
 #endif
@@ -97,29 +98,46 @@ static const sensor_value_t *sensor_values[] = {
 
 static const sensor_handler_t sensor_handler[] = {
 #if BATTERY_ENABLED
-    { &sensor_battery_init, &sensor_battery_sample, &sensor_battery_ctx,
-      &sensor_battery_ctx.sensor_available, NULL },
+    { &sensor_battery_init,
+      &sensor_battery_sample,
+      &sensor_battery_ctx,
+      &sensor_battery_ctx.sensor_available,
+      NULL },
 #endif
 #if SHTC3_ENABLED
-    { &sensor_shtc3_init, &sensor_shtc3_sample, &sensor_shtc3_ctx,
-      &sensor_shtc3_ctx.sensor_available, NULL},
+    { &sensor_shtc3_init,
+      &sensor_shtc3_sample,
+      &sensor_shtc3_ctx,
+      &sensor_shtc3_ctx.sensor_available,
+      NULL },
 #endif
 #if DPS310_ENABLED
-    { &sensor_dps310_init, &sensor_dps310_sample, &sensor_dps310_ctx,
-      &sensor_dps310_ctx.sensor_available, NULL},
+    { &sensor_dps310_init,
+      &sensor_dps310_sample,
+      &sensor_dps310_ctx,
+      &sensor_dps310_ctx.sensor_available,
+      NULL },
 #endif
 #if BME280_ENABLED
-    { &sensor_bme280_init, &sensor_bme280_sample, &sensor_bme280_ctx,
-      &sensor_bme280_ctx.sensor_available, NULL},
+    { &sensor_bme280_init,
+      &sensor_bme280_sample,
+      &sensor_bme280_ctx,
+      &sensor_bme280_ctx.sensor_available,
+      NULL },
 #endif
 #if NETWORK_METRICS_ENABLED
-    { &network_metrics_init, &network_metrics_sample, &network_metrics_ctx,
-      &network_metrics_ctx.sensor_available, NULL},
+    { &network_metrics_init,
+      &network_metrics_sample,
+      &network_metrics_ctx,
+      &network_metrics_ctx.sensor_available,
+      NULL },
 #endif
 #if ACCELEROMETER_ENABLED
-    { &sensor_lis2dh12_init, &sensor_lis2dh12_sample, &sensor_lis2dh12_ctx,
+    { &sensor_lis2dh12_init,
+      &sensor_lis2dh12_sample,
+      &sensor_lis2dh12_ctx,
       &sensor_lis2dh12_ctx.sensor_available,
-      &sensor_lis2dh12_init_done_evt},
+      &sensor_lis2dh12_init_done_evt },
 #endif
     { NULL, NULL, NULL, NULL },
 };
@@ -127,12 +145,9 @@ static const sensor_handler_t sensor_handler[] = {
 /*
  * NFC interface
  */
-static void sensors_nfc_on_open(
-    mira_nfc_ndef_writer_t *writer);
+static void sensors_nfc_on_open(mira_nfc_ndef_writer_t* writer);
 
-static const nfcif_handler_t sensors_nfc_handler = {
-    .on_open = sensors_nfc_on_open
-};
+static const nfcif_handler_t sensors_nfc_handler = { .on_open = sensors_nfc_on_open };
 
 /*
  * UDP interface
@@ -144,16 +159,13 @@ static sensors_sender_context_t sender_ctx;
  */
 PROCESS(sensors_proc, "Sensors");
 
-void sensors_init(
-    void)
+void
+sensors_init(void)
 {
     process_start(&sensors_proc, NULL);
 }
 
-PROCESS_THREAD(
-    sensors_proc,
-    ev,
-    data)
+PROCESS_THREAD(sensors_proc, ev, data)
 {
     static int i;
     static int sensor_count;
@@ -166,8 +178,8 @@ PROCESS_THREAD(
      */
     for (i = 0; sensor_handler[i].init_proc != NULL; i++) {
         process_start(sensor_handler[i].init_proc, sensor_handler[i].storage);
-        PROCESS_WAIT_EVENT_UNTIL(ev == *(sensor_handler[i].init_done_evnt)
-            || !(process_is_running(sensor_handler[i].init_proc)));
+        PROCESS_WAIT_EVENT_UNTIL(ev == *(sensor_handler[i].init_done_evnt) ||
+                                 !(process_is_running(sensor_handler[i].init_proc)));
     }
 
     printf("Sensors: Started\n");
@@ -185,9 +197,7 @@ PROCESS_THREAD(
          */
         for (i = 0; sensor_handler[i].init_proc != NULL; i++) {
             if (*sensor_handler[i].sensor_available == MIRA_TRUE) {
-                process_start(
-                    sensor_handler[i].sample_proc,
-                    sensor_handler[i].storage);
+                process_start(sensor_handler[i].sample_proc, sensor_handler[i].storage);
             }
         }
 
@@ -196,8 +206,7 @@ PROCESS_THREAD(
          */
         for (i = 0; sensor_handler[i].init_proc != NULL; i++) {
             if (*sensor_handler[i].sensor_available == MIRA_TRUE) {
-                PROCESS_WAIT_WHILE(
-                    process_is_running(sensor_handler[i].sample_proc));
+                PROCESS_WAIT_WHILE(process_is_running(sensor_handler[i].sample_proc));
             }
         }
 
@@ -208,13 +217,12 @@ PROCESS_THREAD(
         sensor_count = 0;
         for (i = 0; sensor_values[i] != NULL; i++) {
             if (sensor_values[i]->type != SENSOR_VALUE_TYPE_NONE) {
-                const sensor_value_t *val = sensor_values[i];
-                printf(
-                    "%16s = %10ld / %10lu %s\n",
-                    sensor_value_type_name[val->type],
-                    val->value_p,
-                    val->value_q,
-                    sensor_value_unit_name[val->type]);
+                const sensor_value_t* val = sensor_values[i];
+                printf("%16s = %10ld / %10lu %s\n",
+                       sensor_value_type_name[val->type],
+                       val->value_p,
+                       val->value_q,
+                       sensor_value_unit_name[val->type]);
 
                 sensor_count++;
             }
@@ -228,23 +236,22 @@ PROCESS_THREAD(
         etimer_set(&timer, CLOCK_SECOND * app_config.update_interval);
 
         PROCESS_YIELD_UNTIL(etimer_expired(&timer));
-
     }
 
     PROCESS_END();
 }
 
-static void sensors_nfc_on_open(
-    mira_nfc_ndef_writer_t *writer)
+static void
+sensors_nfc_on_open(mira_nfc_ndef_writer_t* writer)
 {
     int i;
     char vendor[128];
     char value[128];
     for (i = 0; sensor_values[i] != NULL; i++) {
-        const sensor_value_t *val = sensor_values[i];
+        const sensor_value_t* val = sensor_values[i];
         int64_t val_pq;
 
-        int32_t val_int; /* Integer values */
+        int32_t val_int;  /* Integer values */
         int32_t val_fraq; /* Fractional values, thousands */
 
         val_pq = val->value_p;
@@ -260,21 +267,18 @@ static void sensors_nfc_on_open(
             val_fraq += 1000;
         }
 
-        sprintf(
-            vendor,
-            "application/vnd.lumenradio.sensor.%s",
-            sensor_value_type_name[sensor_values[i]->type]);
-        sprintf(
-            value,
-            "%ld.%03ld %s",
-            val_int,
-            val_fraq,
-            sensor_value_unit_name[val->type]);
+        sprintf(vendor,
+                "application/vnd.lumenradio.sensor.%s",
+                sensor_value_type_name[sensor_values[i]->type]);
+        sprintf(value, "%ld.%03ld %s", val_int, val_fraq, sensor_value_unit_name[val->type]);
 
-        mira_nfc_ndef_write_copy(writer, MIRA_NFC_NDEF_TNF_MIME_TYPE,
-            (const uint8_t *) vendor, strlen(vendor),
-            NULL, 0,
-            (uint8_t *) value, strlen(value)
-        );
+        mira_nfc_ndef_write_copy(writer,
+                                 MIRA_NFC_NDEF_TNF_MIME_TYPE,
+                                 (const uint8_t*)vendor,
+                                 strlen(vendor),
+                                 NULL,
+                                 0,
+                                 (uint8_t*)value,
+                                 strlen(value));
     }
 }

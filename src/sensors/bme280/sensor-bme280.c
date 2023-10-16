@@ -14,34 +14,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <mira.h>
 #include "sensor-bme280.h"
+#include "board.h"
 #include "sensor-bme280-math.h"
 #include "spi-if.h"
-#include "board.h"
+#include <mira.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
 
-#define BME280_READ             0x80
-#define BME280_WRITE            0x00
+#define BME280_READ 0x80
+#define BME280_WRITE 0x00
 
-#define BME280_REG_RESET        0xE0
-#define BME280_RESET_VAL        0xB6
-#define BME_280_ID_REG          0xD0
-#define BME_280_ID              0x60
+#define BME280_REG_RESET 0xE0
+#define BME280_RESET_VAL 0xB6
+#define BME_280_ID_REG 0xD0
+#define BME_280_ID 0x60
 
 PROCESS(sensor_bme280_init, "Sensor: BME280 startup");
 PROCESS(sensor_bme280_sample, "Sensor: BME280 reader");
 
-PROCESS_THREAD(
-    sensor_bme280_init,
-    ev,
-    data)
+PROCESS_THREAD(sensor_bme280_init, ev, data)
 {
     static struct etimer tm;
-    static sensor_bme280_ctx_t *ctx;
+    static sensor_bme280_ctx_t* ctx;
     static uint8_t tx_buf[2];
     static uint8_t raw88[0xa1 - 0x88 + 1];
     static uint8_t rawe1[0xf0 - 0xe1 + 1];
@@ -82,9 +79,9 @@ PROCESS_THREAD(
         PROCESS_YIELD_UNTIL(etimer_expired(&tm));
 
         /*
-        * Read all registers from 0x81, which means raw_regs[reg-1] will
-        * be the register value. raw_regs[0] is undefined
-        */
+         * Read all registers from 0x81, which means raw_regs[reg-1] will
+         * be the register value. raw_regs[0] is undefined
+         */
         spi_cs_active_set(BOARD_BME280_CS_PIN);
         tx_buf[0] = BME280_READ | (0x88 & 0x7f);
         mira_spi_transfer(SPI_ID, tx_buf, 1, raw88, (0xa1 - 0x88 + 1));
@@ -110,12 +107,9 @@ PROCESS_THREAD(
     PROCESS_END();
 }
 
-PROCESS_THREAD(
-    sensor_bme280_sample,
-    ev,
-    data)
+PROCESS_THREAD(sensor_bme280_sample, ev, data)
 {
-    static sensor_bme280_ctx_t *ctx;
+    static sensor_bme280_ctx_t* ctx;
     static uint8_t tx_buf[6];
     static uint8_t rx_buf[9];
     static struct etimer tm;
@@ -132,13 +126,13 @@ PROCESS_THREAD(
     PROCESS_WAIT_UNTIL(spi_request(BOARD_BME280_CS_PIN));
 
     tx_buf[0] = BME280_WRITE | (0xf2 & 0x7f); /* ctrl_hum */
-    tx_buf[1] = (3 << 0); /* osrs_h = oversampling x1 => 1 */
+    tx_buf[1] = (3 << 0);                     /* osrs_h = oversampling x1 => 1 */
 
-    tx_buf[2] = BME280_WRITE | (0xf4 & 0x7f); /* ctrl_meas */
+    tx_buf[2] = BME280_WRITE | (0xf4 & 0x7f);   /* ctrl_meas */
     tx_buf[3] = (1 << 0) | (1 << 2) | (1 << 5); /* mode = 1 (forced mode), osrs_p = 1, osrs_t = 1 */
 
     tx_buf[4] = BME280_WRITE | (0xf5 & 0x7f); /* config */
-    tx_buf[5] = 0; /* t_sb = dont care, filter = 0 (off), spi3w_en = 0 */
+    tx_buf[5] = 0;                            /* t_sb = dont care, filter = 0 (off), spi3w_en = 0 */
 
     mira_spi_transfer(SPI_ID, tx_buf, 6, NULL, 0);
     PROCESS_WAIT_WHILE(mira_spi_transfer_is_in_progress(SPI_ID));
@@ -157,16 +151,13 @@ PROCESS_THREAD(
 
     /* Print measurements */
 
-    int32_t adc_p = ((uint32_t) rx_buf[1]) << 12
-        | ((uint32_t) rx_buf[2]) << 4
-        | ((uint32_t) rx_buf[3]) >> 4;
+    int32_t adc_p =
+      ((uint32_t)rx_buf[1]) << 12 | ((uint32_t)rx_buf[2]) << 4 | ((uint32_t)rx_buf[3]) >> 4;
 
-    int32_t adc_t = ((uint32_t) rx_buf[4]) << 12
-        | ((uint32_t) rx_buf[5]) << 4
-        | ((uint32_t) rx_buf[6]) >> 4;
+    int32_t adc_t =
+      ((uint32_t)rx_buf[4]) << 12 | ((uint32_t)rx_buf[5]) << 4 | ((uint32_t)rx_buf[6]) >> 4;
 
-    int32_t adc_h = ((uint32_t) rx_buf[7]) << 8
-        | ((uint32_t) rx_buf[8]) << 0;
+    int32_t adc_h = ((uint32_t)rx_buf[7]) << 8 | ((uint32_t)rx_buf[8]) << 0;
 
     int32_t value_T = sensor_bme280_math_calc_t(&ctx->cal, adc_t);
     int32_t value_P = sensor_bme280_math_calc_p(&ctx->cal, adc_p, value_T);

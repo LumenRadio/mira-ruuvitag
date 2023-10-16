@@ -17,10 +17,11 @@
 #ifndef SENSOR_BATTERY_H
 #define SENSOR_BATTERY_H
 
-#include <mira.h>
 #include "sensor-value.h"
+#include <mira.h>
 
-typedef struct {
+typedef struct
+{
     mira_adc_context_t adc;
     sensor_value_t val_battery;
     mira_bool_t sensor_available;

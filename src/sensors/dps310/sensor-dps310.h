@@ -17,10 +17,11 @@
 #ifndef SENSOR_DPS310_H
 #define SENSOR_DPS310_H
 
-#include <mira.h>
 #include "sensor-value.h"
+#include <mira.h>
 
-typedef struct {
+typedef struct
+{
     int32_t m_c0Half;
     int32_t m_c1;
     int32_t m_c00;
@@ -32,7 +33,8 @@ typedef struct {
     int32_t m_c30;
 } sensor_dps310_calib_t;
 
-typedef struct {
+typedef struct
+{
     sensor_dps310_calib_t cal;
     sensor_value_t val_pressure;
     mira_bool_t sensor_available;

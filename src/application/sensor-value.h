@@ -22,7 +22,8 @@
 /**
  * Unit of a value
  */
-typedef enum {
+typedef enum
+{
     SENSOR_VALUE_UNIT_NONE = 0, /* No value set */
     SENSOR_VALUE_UNIT_DEG_C,
     SENSOR_VALUE_UNIT_PASCAL,
@@ -31,7 +32,8 @@ typedef enum {
     SENSOR_VALUE_UNIT_MG
 } sensor_value_unit_t;
 
-typedef enum {
+typedef enum
+{
     SENSOR_VALUE_TYPE_NONE = 0, /* No value set */
     SENSOR_VALUE_TYPE_TEMPERATURE,
     SENSOR_VALUE_TYPE_PRESSURE,
@@ -44,13 +46,14 @@ typedef enum {
     SENSOR_VALUE_TYPE_MOVE_COUNT,
 } sensor_value_type_t;
 
-typedef struct {
+typedef struct
+{
     int32_t value_p;
     uint32_t value_q;
     sensor_value_type_t type;
 } sensor_value_t;
 
-extern const char *sensor_value_unit_name[];
-extern const char *sensor_value_type_name[];
+extern const char* sensor_value_unit_name[];
+extern const char* sensor_value_type_name[];
 
 #endif

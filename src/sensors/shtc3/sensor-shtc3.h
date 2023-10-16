@@ -17,12 +17,13 @@
 #ifndef SENSOR_SHT31_H
 #define SENSOR_SHT31_H
 
-#include <mira.h>
 #include "sensor-value.h"
+#include <mira.h>
 
 static const uint8_t SHTC3_I2C_SLAVE_ADDRESS = 0x70;
 
-typedef struct {
+typedef struct
+{
     sensor_value_t val_temperature;
     sensor_value_t val_humidity;
     mira_bool_t sensor_available;

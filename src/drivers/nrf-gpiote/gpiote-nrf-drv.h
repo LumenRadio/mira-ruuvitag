@@ -20,17 +20,17 @@
 #include "nrf_drv_gpiote.h"
 #include "nrfx_gpiote.h"
 
-typedef enum {
+typedef enum
+{
     NRF_EDGE_RISING,  /**< @brief A low to high transition */
     NRF_EDGE_FALLING, /**< @brief A high to low transition */
     NRF_EDGE_ANY      /**< @brief A low to high or a high to low transition */
 } nrf_edge_t;
 
 /* Enable edge events using the nRF SDk */
-uint8_t gpiote_edge_event_init(
-    nrfx_gpiote_pin_t te_pin,
-    nrf_gpiote_polarity_t polarity,
-    nrf_gpio_pin_pull_t pull,
-    nrfx_gpiote_evt_handler_t callback);
+uint8_t gpiote_edge_event_init(nrfx_gpiote_pin_t te_pin,
+                               nrf_gpiote_polarity_t polarity,
+                               nrf_gpio_pin_pull_t pull,
+                               nrfx_gpiote_evt_handler_t callback);
 
 #endif

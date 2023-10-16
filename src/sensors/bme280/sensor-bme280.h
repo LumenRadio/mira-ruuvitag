@@ -17,11 +17,12 @@
 #ifndef SENSOR_BME280_H
 #define SENSOR_BME280_H
 
-#include <mira.h>
 #include "sensor-bme280-math.h"
 #include "sensor-value.h"
+#include <mira.h>
 
-typedef struct {
+typedef struct
+{
     sensor_bme280_calib_t cal;
     sensor_value_t val_temperature;
     sensor_value_t val_humidity;

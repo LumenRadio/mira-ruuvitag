@@ -22,18 +22,18 @@
 #define board_selection 0
 
 /*
-    * 0 = Ruuvi-tag
-    * 1 = nRF52840DK
-    * 2 = Ruuvi devboard on nRF52832
-    * 3 = nRF52832DK
-*/
+ * 0 = Ruuvi-tag
+ * 1 = nRF52840DK
+ * 2 = Ruuvi devboard on nRF52832
+ * 3 = nRF52832DK
+ */
 
 /* DEBUG FOR RTT */
-#define RTT_DEBUG       0
+#define RTT_DEBUG 0
 /* ------------- */
 
 #if RTT_DEBUG
-#define BOARD_STDOUT_RTT_ID             0
+#define BOARD_STDOUT_RTT_ID 0
 #endif
 
 #if (board_selection == 0)
@@ -50,11 +50,8 @@
 
 #endif
 
-void board_setup(
-    void);
+void board_setup(void);
 
-void board_led_set(
-    int num,
-    int val);
+void board_led_set(int num, int val);
 
 #endif
