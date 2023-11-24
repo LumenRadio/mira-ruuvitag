@@ -1,4 +1,4 @@
-FROM python:3.8-slim
+FROM python:3.7-slim
 
 # Set the working directory in Docker WORKDIR /usr/src/app
 
