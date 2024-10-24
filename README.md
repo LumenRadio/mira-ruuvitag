@@ -54,7 +54,7 @@ https://docs.lumenrad.io/miraos/2.8.1/description/gateway.html#quick-start-guide
 Get the tools required for nRF targets according to:
 https://docs.lumenrad.io/miraos/2.8.0/description/toolchain/tools.html
 
-The software is built to work with MiraOS version 2.2.2 or later.
+The software is built to work with MiraOS version 2.10.0 or later.
 
 Download and unpack mira to `[src vendor libmira](src/vendor/libmira)`. To get access to libmira contact sales@lumenradio.com.
 

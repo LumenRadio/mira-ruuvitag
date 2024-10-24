@@ -23,6 +23,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "network-monitoring.h"
 #include "board.h"
 #include "nfc-if.h"
 #include "sensor-lis2dh12.h"
@@ -36,6 +37,7 @@ static int new_config_loaded;
 static int lost_field = 0;
 static int do_restart = 0;
 static int acc_config_loaded = 0;
+static int mon_cfg_loaded = 0;
 
 PROCESS(app_config_writer, "Config writer");
 
@@ -63,6 +65,9 @@ print_config(void)
     printf("Rate: %d\n", (int)app_config.net_rate);
     printf("Update interval: %d\n", (int)app_config.update_interval);
     printf("Move_threshold: %02x\n", app_config.move_threshold);
+    printf("Network monitor enabled: %u\n", app_config.network_monitor_enabled);
+    printf("Network monitor update inverval (s): %d\n", (int) app_config.network_monitor_update_interval_s);
+
 }
 
 void
@@ -243,6 +248,26 @@ config_nfc_on_open(mira_nfc_ndef_writer_t* writer)
                              0,
                              (const uint8_t*)move_thld,
                              strlen(move_thld));
+    char mon_enabled[10];
+    sprintf(mon_enabled, "%d", app_config.network_monitor_enabled);
+    mira_nfc_ndef_write_copy(writer,
+                             MIRA_NFC_NDEF_TNF_MIME_TYPE,
+                             (const uint8_t*)"application/vnd.lumenradio.net_monitor_enabled",
+                             46,
+                             NULL,
+                             0,
+                             (const uint8_t*)mon_enabled,
+                             strlen(mon_enabled));
+    char mon_update_intvl[10];
+    sprintf(mon_update_intvl, "%d", app_config.network_monitor_update_interval_s);
+    mira_nfc_ndef_write_copy(writer,
+                             MIRA_NFC_NDEF_TNF_MIME_TYPE,
+                             (const uint8_t*)"application/vnd.lumenradio.net_monitor_update_interval",
+                             54,
+                             NULL,
+                             0,
+                             (const uint8_t*)mon_update_intvl,
+                             strlen(mon_update_intvl));
 }
 
 static int
@@ -353,6 +378,36 @@ config_nfc_on_save(uint8_t* file, mira_size_t size)
                 acc_config_loaded = 1;
             }
         }
+        if (cmp_str("application/vnd.lumenradio.net_monitor_enabled", rec.type, rec.type_length)) {
+            uint32_t tmp;
+            if ((rec.payload_length != 1) ||
+                destrint(&tmp, rec.payload, rec.payload_length)) {
+                printf("Invalid net_monitor_enabled\n");
+                return;
+            }
+            if (tmp != 0 && tmp != 1) {
+                tmp = 0;
+            }
+            new_config.network_monitor_enabled = tmp;
+            if (new_config.network_monitor_enabled != app_config.network_monitor_enabled) {
+                mon_cfg_loaded = 1;
+            }
+        }
+        if (cmp_str("application/vnd.lumenradio.net_monitor_update_interval", rec.type, rec.type_length)) {
+            uint32_t tmp;
+            if ((rec.payload_length < 1 && rec.payload_length > 5) ||
+                destrint(&tmp, rec.payload, rec.payload_length)) {
+                printf("Invalid net_monitor_update_interval\n");
+                return;
+            }
+            if (tmp > 65535 || tmp < 0) {
+                tmp = 65535;
+            }
+            new_config.network_monitor_update_interval_s = tmp;
+            if (new_config.network_monitor_update_interval_s != app_config.network_monitor_update_interval_s) {
+                mon_cfg_loaded = 1;
+            }
+        }
     }
 
     new_config_loaded = 1;
@@ -361,6 +416,7 @@ config_nfc_on_save(uint8_t* file, mira_size_t size)
 PROCESS_THREAD(app_config_writer, ev, data)
 {
     mira_status_t status;
+    static network_monitoring_cfg_t mon_cfg;
     PROCESS_BEGIN();
     while (1) {
         PROCESS_YIELD_UNTIL(lost_field);
@@ -382,8 +438,17 @@ PROCESS_THREAD(app_config_writer, ev, data)
                 mira_sys_reset();
             }
             do_restart = 0;
+            
             /* If we don't do a restart, copy new config to app_config */
             memcpy(&app_config, &new_config, sizeof(app_config_t));
+
+            if (mon_cfg_loaded){
+                mon_cfg.enabled = app_config.network_monitor_enabled;
+                mon_cfg.update_interval_s = app_config.network_monitor_update_interval_s;
+                network_monitoring_deinit();
+                network_monitoring_init(&mon_cfg);
+                mon_cfg_loaded = 0;
+            }
 
             /* Restarting process after loading new accelerometer config */
             if (acc_config_loaded) {

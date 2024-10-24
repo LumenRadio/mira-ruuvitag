@@ -23,6 +23,7 @@
 #include "app-config.h"
 #include "net-status.h"
 #include "sensors.h"
+#include "network-monitoring.h"
 // #include "net-fota.h"
 
 PROCESS(main_proc, "Main process");
@@ -30,6 +31,7 @@ PROCESS(main_proc, "Main process");
 PROCESS_THREAD(main_proc, ev, data)
 {
     static mira_net_config_t netconf;
+    static network_monitoring_cfg_t mon_cfg;
     mira_status_t res;
     PROCESS_BEGIN();
 
@@ -47,7 +49,11 @@ PROCESS_THREAD(main_proc, ev, data)
         printf("!mira_net_init returned: %d\n", res);
     }
     net_status_init();
-
+    
+    mon_cfg.enabled = app_config.network_monitor_enabled;
+    mon_cfg.update_interval_s = app_config.network_monitor_update_interval_s;
+    network_monitoring_init(&mon_cfg);
+    
     sensors_init();
 
     PROCESS_END();

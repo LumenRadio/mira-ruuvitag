@@ -51,6 +51,7 @@ CFLAGS += -I$(DRIVERS_DIR)/nrf-gpiote
 CFLAGS += -I$(DRIVERS_DIR)/spi
 CFLAGS += -Isrc/net-status
 CFLAGS += -Isrc/network-metrics
+CFLAGS += -Isrc/network-monitoring
 CFLAGS += -I$(SENSORS_DIR)/battery
 CFLAGS += -I$(SENSORS_DIR)/bme280
 CFLAGS += -I$(SENSORS_DIR)/lis2dh12
@@ -90,6 +91,7 @@ SOURCE_FILES = \
 	$(RUUIV_APP_DIR)/sensors.c \
 	$(RUUIV_APP_DIR)/sensors-sender.c \
 	src/network-metrics/network-metrics.c \
+	src/network-monitoring/network-monitoring.c\
 	$(SENSORS_DIR)/lis2dh12/sensor-lis2dh12.c \
 	$(DRIVERS_DIR)/spi/spi-if.c \
 	$(DRIVERS_DIR)/nrf-gpiote/gpiote-nrf-drv.c \
