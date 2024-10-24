@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the content of the local src directory to the working directory
-COPY udp_to_influx.py .
+COPY udp_to_influx2.py .
 
 # Specify the command to run on container start
-CMD [ "python", "-u", "udp_to_influx.py" ]
+CMD [ "python", "-u", "udp_to_influx2.py" ]

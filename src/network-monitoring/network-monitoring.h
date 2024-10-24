@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, LumenRadio AB All rights reserved.
+ * Copyright (c) 2024, LumenRadio AB All rights reserved.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -14,32 +14,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef APP_CONFIG_H
-#define APP_CONFIG_H
+#ifndef NETWORK_MONITORING_H
+#define NETWORK_MONITORING_H
 
-#include <mira.h>
-#include <stdint.h>
+#include "mira.h"
 
-typedef struct
-{
-    char name[32];
+typedef struct {
+    uint8_t enabled;
+    uint16_t update_interval_s;
+} network_monitoring_cfg_t;
 
-    uint8_t net_key[16];
-    uint32_t net_panid;
-    uint8_t net_rate;
-
-    uint8_t reserved;
-
-    uint8_t move_threshold;
-
-    uint16_t update_interval;
-    uint8_t network_monitor_enabled;
-    uint16_t network_monitor_update_interval_s;
-} app_config_t;
-
-extern app_config_t app_config;
-
-void app_config_init(void);
-int app_config_is_configured(void);
+void network_monitoring_init(network_monitoring_cfg_t *cfg);
+void network_monitoring_deinit(void);
 
 #endif

@@ -1,11 +1,23 @@
 apiVersion: 1
 
 datasources:
-  - name: InfluxDB
+  - name: influxdb-flux
     type: influxdb
-    url: http://influxdb:8086
     access: proxy
-    database: miradb
-    user: mirauser
-    password: mirapassword
+    url: http://localhost:8086
+    user: admin
+    password: admin_password
     isDefault: true
+    secureJsonData:
+      token: mytoken
+    jsonData:
+      version: Flux
+      organization: myorg
+      httpMode: GET
+      defaultBucket: miramon
+      tlsSkipVerify: true
+  - name: Infinity
+    type: yesoreyeram-infinity-datasource
+    access: proxy
+    jsonData:
+      authenticationType: none

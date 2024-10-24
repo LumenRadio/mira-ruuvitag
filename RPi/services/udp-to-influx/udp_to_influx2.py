@@ -3,9 +3,11 @@
 import os
 import socket
 import ipaddress
-import influxdb
+from influxdb_client import InfluxDBClient
+from influxdb_client.client.write_api import SYNCHRONOUS
 import datetime
 import math
+# import argparse
 
 _units = ["none", "deg C", "Pa", "%", "V", "", "mg", "mg", "mg", ""]
 _types = [
@@ -142,11 +144,12 @@ def calculate_pdr(host, seq_no):
 
 
 class DBReporter:
-    def __init__(self, host, port, user, password, dbname, root):
-        self.client = influxdb.InfluxDBClient(host, port, user, password, dbname)
+    def __init__(self, url, user, password, dbname, myorg, root):
+        self.client = InfluxDBClient(url="http://localhost:8086", username=user, password=password, org=myorg)
+        self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
         self.calc_hops = CalculateNbrOfHops(root)
 
-    def upload(self, tagdata, host):
+    def upload(self, tagdata, host, dbname, myorg):
         hops = self.calc_hops.calc_hops(host, tagdata.parent)
         now = datetime.datetime.utcnow().isoformat() + "Z"
         body = []
@@ -214,7 +217,7 @@ class DBReporter:
                 "fields": {"value": acc_rms},
             }
         )
-        self.client.write_points(body)
+        self.write_api.write(dbname, myorg, body)
         now = datetime.datetime.now()
         print(
             "[{}] host: {}, hops: {}, sensor: {}".format(
@@ -233,6 +236,15 @@ def parse_ipv6_address(string):
 
 
 def main():
+    # parser = argparse.ArgumentParser(description="UDP to influx2)
+    # token = ""
+    # parser.add_argument(
+    #     "-t",
+    #     "--token",
+    #     dest=token,
+    #     help="Influxdb2 auth token",
+    #     required=True)
+    
     root_addr = os.environ.get("ROOT_ADDR", None)
     if root_addr is not None and root_addr != "":
         root_addr = parse_ipv6_address(root_addr)
@@ -242,10 +254,10 @@ def main():
             f"Starting udp-to-influx with no root address set. Falling back on automatic detection of root for hops calculations."
         )
 
-    db = DBReporter("localhost", 8086, "mirauser", "mirapassword", "miradb", root_addr)
+    db = DBReporter("http://localhost:8086", "admin", "admin_password", "miradb", "myorg", root_addr)
 
     for tagdata, host, port in udp_server():
-        db.upload(tagdata, host)
+        db.upload(tagdata, host, "miradb", "myorg")
 
 
 if __name__ == "__main__":

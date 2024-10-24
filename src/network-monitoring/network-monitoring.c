@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, LumenRadio AB All rights reserved.
+ * Copyright (c) 2024, LumenRadio AB All rights reserved.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -14,32 +14,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef APP_CONFIG_H
-#define APP_CONFIG_H
-
 #include <mira.h>
-#include <stdint.h>
+#include "stdio.h"
+#include "network-monitoring.h"
 
-typedef struct
-{
-    char name[32];
+static mira_diag_monitoring_sender_cfg_t mon_config;
 
-    uint8_t net_key[16];
-    uint32_t net_panid;
-    uint8_t net_rate;
+void network_monitoring_init(network_monitoring_cfg_t *cfg){
+    mon_config.enabled_fields_bitmask = MIRA_DIAG_MONITOR_ALL_FIELDS_ENABLED;
+    mon_config.send_interval_s = cfg->update_interval_s;
+    if (cfg->enabled == 1 && mon_config.send_interval_s != 0){
+        mira_diag_enable_monitoring_sender(&mon_config);
+        printf("Network monitoring sender started\n");
+    } else {
+        mira_diag_disable_monitoring_sender();
+    }
+}
 
-    uint8_t reserved;
-
-    uint8_t move_threshold;
-
-    uint16_t update_interval;
-    uint8_t network_monitor_enabled;
-    uint16_t network_monitor_update_interval_s;
-} app_config_t;
-
-extern app_config_t app_config;
-
-void app_config_init(void);
-int app_config_is_configured(void);
-
-#endif
+void network_monitoring_deinit(void){
+    mira_diag_disable_monitoring_sender();
+}
