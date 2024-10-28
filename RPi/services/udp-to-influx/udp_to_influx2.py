@@ -23,45 +23,6 @@ _types = [
     "move_count",
 ]
 pdr_dict = {}
-# Calculate number of hops towards root.
-
-
-class CalculateNbrOfHops:
-    def __init__(self, root):
-        self.dict_address_parent = {}
-        self.root_address = root
-
-    def calc_hops(self, host, parent_address):
-        # key is the host, value is the parent
-        self.dict_address_parent[host] = parent_address
-        # Will add if the host if not present, otherwise update
-
-        # If we have a root address given, use that
-        if self.root_address:
-            nbr_of_hops = 1
-            # Expand ipv6 addresses from possibly abbreviated form before comparing
-            while parse_ipv6_address(parent_address) != parse_ipv6_address(
-                self.root_address
-            ):
-                nbr_of_hops = nbr_of_hops + 1
-
-                parent_address = self.dict_address_parent.get(parent_address)
-                if parent_address == None or nbr_of_hops > 30:
-                    # Safety if stuck in loop or parent is not present
-                    return -1
-            return nbr_of_hops
-        # If no root address given, just follow the parents up until we hit None. Most likely this is root
-        else:
-            nbr_of_hops = 0
-            while parent_address != None:
-                nbr_of_hops += 1
-                parent_address = self.dict_address_parent.get(parent_address)
-                if nbr_of_hops > 30:
-                    # Safe if stuck in loop
-                    return -1
-
-            return nbr_of_hops
-
 
 # Value processing
 
@@ -144,13 +105,11 @@ def calculate_pdr(host, seq_no):
 
 
 class DBReporter:
-    def __init__(self, url, user, password, dbname, myorg, root):
+    def __init__(self, url, user, password, dbname, myorg):
         self.client = InfluxDBClient(url="http://localhost:8086", username=user, password=password, org=myorg)
         self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
-        self.calc_hops = CalculateNbrOfHops(root)
 
     def upload(self, tagdata, host, dbname, myorg):
-        hops = self.calc_hops.calc_hops(host, tagdata.parent)
         now = datetime.datetime.utcnow().isoformat() + "Z"
         body = []
         acc_avg = 0
@@ -161,8 +120,7 @@ class DBReporter:
                 if _types[sensor.type] == "etx":
                     fields = {
                         "etx": sensor.value,
-                        "neigbour": tagdata.parent,
-                        "hops": hops,
+                        "neigbour": tagdata.parent
                     }
                 else:
                     fields = {
@@ -219,12 +177,6 @@ class DBReporter:
         )
         self.write_api.write(dbname, myorg, body)
         now = datetime.datetime.now()
-        print(
-            "[{}] host: {}, hops: {}, sensor: {}".format(
-                now.strftime("%H:%M:%S"), host, hops, tagdata
-            )
-        )
-
 
 def parse_ipv6_address(string):
     try:
@@ -236,25 +188,8 @@ def parse_ipv6_address(string):
 
 
 def main():
-    # parser = argparse.ArgumentParser(description="UDP to influx2)
-    # token = ""
-    # parser.add_argument(
-    #     "-t",
-    #     "--token",
-    #     dest=token,
-    #     help="Influxdb2 auth token",
-    #     required=True)
-    
-    root_addr = os.environ.get("ROOT_ADDR", None)
-    if root_addr is not None and root_addr != "":
-        root_addr = parse_ipv6_address(root_addr)
-        print(f"Starting udp-to-influx with root address set to {root_addr}")
-    else:
-        print(
-            f"Starting udp-to-influx with no root address set. Falling back on automatic detection of root for hops calculations."
-        )
 
-    db = DBReporter("http://localhost:8086", "admin", "admin_password", "miradb", "myorg", root_addr)
+    db = DBReporter("http://localhost:8086", "admin", "admin_password", "miradb", "myorg")
 
     for tagdata, host, port in udp_server():
         db.upload(tagdata, host, "miradb", "myorg")

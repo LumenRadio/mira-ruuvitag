@@ -21,9 +21,13 @@ The following components are needed.
 
 To get any of the Mira products, please get in contact with sales@lumenradio.com.
 ## Setup raspbian
-1. Follow the instructions on https://www.raspberrypi.com/software/ to create a new installation of Raspebrry Pi OS.
+
+1. Follow the instructions on https://www.raspberrypi.com/software/ to create a new installation of Raspebrry Pi OS 64 bit.
 2. Connect your raspberry Pi to the internet. 
 3. Create a sudo user and log in. 
+
+> [!NOTE]
+> 64 bit OS is required.
 
 ## Install docker
 ```
