@@ -1,0 +1,43 @@
+# Rate: fast = 0, mid = 8, slow = 12
+MIRA_GW_RATE=0
+
+# Only root is a supported mode
+MIRA_GW_MODE=root
+
+# Use AUTO to automatically find a USB bridge, MIRA_GW_DFU_DEV must also be set
+MIRA_GW_DEV=AUTO
+# Use AUTO to automatically find a USB bridge
+MIRA_GW_DFU_DEV=AUTO
+
+# The tun device to use
+MIRA_GW_TUNDEV=tun0
+
+MIRA_GW_CONF_FILE=/etc/mira-gateway/mira-gateway.env
+# Maximum number of simultaneous fota clients the gateway can serve
+# Defualt is 2, can be in the range [2..58]
+# MIRA_GW_MAX_FOTA_CLIENTS=2
+
+MIRA_GW_MONITOR_DB=/var/opt/lumenradio/mira-gateway/mon.db
+
+# Choose antenna to use. With MiraUSB module,
+# 0 is the internal antenna, 1 is the external antenna.
+MIRA_GW_ANTENNA=1
+
+# If set, the gateway regularely stores the topology of the network
+# in a graphviz file.
+# MIRA_GW_TOPOLOGY_FILE=/var/opt/lumenradio/mira-gateway/topology.gv
+
+# Set the IPv6 host address and use the /64 address for the mesh network addresses:
+# MIRA_GW_HOST_IP=fd00::1
+
+# Extra addresses to bind:
+# MIRA_GW_BIND_IP_1=ff02::3f0e:ff00
+# MIRA_GW_BIND_IP_2=
+# MIRA_GW_BIND_IP_3=
+
+# If the root should try to reconnect to the network after restart or not.
+MIRA_GW_RECONNECT=no
+
+# Send the network traffic to this pcap file. Can also be a unix domain socket for
+# real time monitoring with wireshark etc:
+# MIRA_GW_PCAP=/root/mira-gw-traffic.pcap

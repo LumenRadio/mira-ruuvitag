@@ -1,41 +1,53 @@
-version: '3'
-
 services:
-  influxdb:
-    image: influxdb:1.8.0
-    ports:
-      - "127.0.0.1:8086:8086"
+  influxdb2:
+    image: influxdb:2.7.5
+    network_mode: host
+    container_name: influxdb2
     volumes:
-      - influxdb-data:/var/lib/influxdb
-      - ./services/influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin_password
+      - DOCKER_INFLUXDB_INIT_ORG=myorg
+      - DOCKER_INFLUXDB_INIT_BUCKET=miramon
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:10.1.2
-    ports:
-      - "3000:3000"
+    image: grafana/grafana:11.0.0
+    network_mode: host
+    container_name: grafana
     depends_on:
-      - influxdb
+      - influxdb2
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_INSTALL_PLUGINS=natel-discrete-panel
-    restart: unless-stopped
-    volumes: 
+      - GF_SECURITY_ADMIN_USER=mirademo
+      - GF_SECURITY_ADMIN_PASSWORD=demomira
+      # GF_INSTALL_PLUGINS will make docker install listed plugins at every startup.
+      # Startup will then fail if there is no internet connection.
+      # The installation is persistent in the docker volume, so after one startup 
+      # GF_INSTALL_PLUGINS can be removed/uncommented to enable offline operation.
+      - GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource
+      - GF_PLUGIN_DIR=/var/lib/grafana/plugins
+    volumes:
       - grafana-data:/var/lib/grafana
       - ./services/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
       - ./services/grafana/dashboard.yml:/etc/grafana/provisioning/dashboards/main.yml
       - ./services/grafana/dashboards:/var/lib/grafana/dashboards
+    restart: unless-stopped
 
   udp-to-influx:
+    container_name: udp-to-influx
     build: ./services/udp-to-influx/
     network_mode: host
     environment:
       - ROOT_ADDR=${ROOT_ADDR}
     depends_on:
-      - influxdb
+      - influxdb2
     restart: unless-stopped
-    
+
 volumes:
   influxdb-data:
+  influxdb-config:
+  influxdb-data-ruuvi:
   grafana-data:

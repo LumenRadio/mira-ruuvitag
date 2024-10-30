@@ -13,17 +13,21 @@ RuuviTags form a Mira mesh network, transmitting sensor data to a border gateway
 
 The following components are needed.
 
-1. libmira
+1. libmira, version 2.10.0 or higher
 2. MiraUSB
-3. Raspberry Pi 3 or 4 with a SD card and a power supply
+3. Raspberry Pi 3, 4 or 5 with a SD card and a power supply
 4. A couple of Ruuvi tags
 5. Mira licenses for the Ruuvi tags
 
 To get any of the Mira products, please get in contact with sales@lumenradio.com.
 ## Setup raspbian
-1. Follow the instructions on https://www.raspberrypi.com/software/ to create a new installation of Raspebrry Pi OS.
+
+1. Follow the instructions on https://www.raspberrypi.com/software/ to create a new installation of Raspebrry Pi OS 64 bit.
 2. Connect your raspberry Pi to the internet. 
 3. Create a sudo user and log in. 
+
+> [!NOTE]
+> 64 bit OS is required.
 
 ## Install docker
 ```
@@ -31,30 +35,42 @@ curl -sSL https://get.docker.com | sh
 sudo usermod -aG docker <username>
 ```
 
-## Set up influxdb, grafana and udp-to-influx services
+## Set up influxdb, grafana, udp-to-influx and mira-gateway services
 On the Raspberry Pi
+Run:
 ```
 cd ~
 git clone https://github.com/LumenRadio/mira-ruuvitag.git
-cd mira-ruuvitag/RPi
-docker compose up -d
 ```
 
-When running this the first time a influx database will be created where the sensor data will be stored.
-After some time, you should be able to access grafana at <raspberry_pi_ip>:3000 in your browser.
-
-## Install Mira gateway
 Download the latest Mira gateway .deb package installer. It can be found on https://dl.lumenradio.com/mira/. Contact sales@lumenradio.com for more information.
 
-Follow (steps regarding setting up the Raspberry Pi can be ignored)
-https://docs.lumenrad.io/miraos/2.8.1/description/gateway.html#quick-start-guide-for-mirausb-module
+Place the mira-gateway and mira-monitoring .deb package installers for your architecture (arm64 or armhf) in mira-ruuvitag/RPi. Update arch variable in mira-ruuvitag/RPi/install_dashboard.sh if needed.
+
+> [!NOTE]
+> These .deb installers are only available from Mira 2.10.0 and above, and only supports raspberry pi targets.
+
+Connect the MiraUSB to the raspberry pi.
+
+Run:
+```
+cd mira-ruuvitag/RPi
+sudo ./install_dashboard.sh
+```
+
+This will create an influx database where the sensor data will be stored, routed by udp_to_influx2.py. It also start the mira-monitoring services, which serves an API for network monitoring data at <raspberry_pi_ip>:3001, which in turn is used by the grafana infinity plugin to display network health data in the dashboard.
+
+After some time, you should be able to access grafana at <raspberry_pi_ip>:3000 in your browser. Credentials are u: mirademo, p: demomira.
+
+> [!NOTE] 
+> The grafana docker container will install all external plugins on every reboot. This will fail if there is no internet connection, which will make grafana not start. To enable offline start of grafana, comment out GF_INSTALL_PLUGINS from the docker file and run "sudo docker compose down" followed by "sudo docker compose up". Docker compose must run at least once with GF_INSTALL_PLUGINS present in the compose file and with an internet connection to download the plugin to persistent storage before it can be commented out.
 
 ## Setting up RuuviTags
 
 Get the tools required for nRF targets according to:
 https://docs.lumenrad.io/miraos/2.8.0/description/toolchain/tools.html
 
-The software is built to work with MiraOS version 2.2.2 or later.
+The software is built to work with MiraOS version 2.10.0 or later.
 
 Download and unpack mira to `[src vendor libmira](src/vendor/libmira)`. To get access to libmira contact sales@lumenradio.com.
 
@@ -116,29 +132,17 @@ A commissioned node will report its network status. It should go from "not assoc
 
 ## Look at the dashboard
 
-You should now be able to see the grafana dashboard at <raspberry_pi_ip>:3000. The dashboard contains the different Ruuvi tag sensors data and some network information from Mira such as the amount of hops from each node to root, the packet delivery rate from tag to root, the parent of each tag and the link quality between each child and parent in the mesh network.
-
-The number of hops from each node is estimated by the udp-to-influx service. Improve this estimate by providing the root address of the network. The root address can be found by
-```
-journalctl -u mira-gateway.service | grep "Root address"
-```
-
-Provide this address to udp-to-influx by
-```
-cd /<absolute_path>/RPi
-ROOT_ADDR=<root IPv6 address> docker compose up -d udp-to-influx
-```
-or
-```
-cd /<absolute_path>/RPi
-echo "ROOT_ADDR=<root IPv6 address>" > .env
-docker compose up -d udp-to-influx
-```
+You should now be able to see the grafana dashboard at <raspberry_pi_ip>:3000. The dashboard contains the different Ruuvi tag sensors data and some network information from Mira such as:
+* Mesh topology.
+* Packet delivery rate from tag to root as well as to the immediate parent.
+* RSSI between each link.
+* Packets sent/received statistics.
+* TX/RX utilization of each node.
 
 Disclaimer
 ----------
 
-Copyright (c) 2023, LumenRadio AB All rights reserved.
+Copyright (c) 2024, LumenRadio AB All rights reserved.
 
 The software is provided as an example of how to integrate MiraOS with a
 RuuviTag. The software is delivered without guarantees, and is not affiliated
